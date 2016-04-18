@@ -37,6 +37,7 @@ var commands = []*Command{
 	cmdLimits,
 	cmdHelp,
 	cmdDataPipe,
+	cmdWipe,
 }
 
 func main() {
