@@ -67,27 +67,23 @@ func init() {
 	cmdImport.Flag.Var(&testsToRun, "test", "Test(s) to run")
 }
 
-func runImport(cmd *Command, args []string) {
-	if len(args) > 0 {
-		ErrorAndExit("Unrecognized argument: " + args[0])
-	}
-
+func DetermineProjectPath(directory string) string {
 	wd, _ := os.Getwd()
 	usr, err := user.Current()
 	var dir string
 
 	//Manually handle shell expansion short cut
 	if err != nil {
-		if strings.HasPrefix(*directory, "~") {
+		if strings.HasPrefix(directory, "~") {
 			ErrorAndExit("Cannot determine tilde expansion, please use relative or absolute path to directory.")
 		} else {
-			dir = *directory
+			dir = directory
 		}
 	} else {
-		if strings.HasPrefix(*directory, "~") {
-			dir = strings.Replace(*directory, "~", usr.HomeDir, 1)
+		if strings.HasPrefix(directory, "~") {
+			dir = strings.Replace(directory, "~", usr.HomeDir, 1)
 		} else {
-			dir = *directory
+			dir = directory
 		}
 	}
 
@@ -98,13 +94,24 @@ func runImport(cmd *Command, args []string) {
 		root = dir
 	}
 
-	force, _ := ActiveForce()
-	files := make(ForceMetadataFiles)
 	if _, err := os.Stat(filepath.Join(root, "package.xml")); os.IsNotExist(err) {
 		ErrorAndExit(" \n" + filepath.Join(root, "package.xml") + "\ndoes not exist")
 	}
 
-	err = filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
+	return root
+}
+
+func runImport(cmd *Command, args []string) {
+	if len(args) > 0 {
+		ErrorAndExit("Unrecognized argument: " + args[0])
+	}
+
+	root := DetermineProjectPath(*directory)
+
+	force, _ := ActiveForce()
+	files := make(ForceMetadataFiles)
+
+	err := filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
 		if f.Mode().IsRegular() {
 			if f.Name() != ".DS_Store" {
 				data, err := ioutil.ReadFile(path)

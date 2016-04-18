@@ -6,6 +6,9 @@ import (
     "regexp"
     // "github.com/davecgh/go-spew/spew"
     "encoding/xml"
+    "path/filepath"
+    "os"
+    "io/ioutil"
 )
 
 var cmdWipe = &Command{
@@ -39,17 +42,37 @@ Examples:
 func runWipe(cmd *Command, args[]string) {
     force, _ := ActiveForce()
 
-    query := ForceMetadataQuery{
-        {Name: "ApexClass", Members: []string{"*"}},
-		//{Name: "ApexComponent", Members: []string{"*"}},
-		// {Name: "ApexPage", Members: []string{"*"}},
-		//{Name: "ApexTrigger", Members: []string{"*"}},
-    }
-    files, err := force.Metadata.Retrieve(query)
-	if err != nil {
-		fmt.Printf("Encountered and error with retrieve...\n")
-		ErrorAndExit(err.Error())
-	}
+
+    // a first attempt to discover files via metadata api, but, frankly,
+    // we may want to not touch any Apex classes not in our local project.
+    // query := ForceMetadataQuery{
+    //     {Name: "ApexClass", Members: []string{"*"}},
+	// 	//{Name: "ApexComponent", Members: []string{"*"}},
+	// 	// {Name: "ApexPage", Members: []string{"*"}},
+	// 	//{Name: "ApexTrigger", Members: []string{"*"}},
+    // }
+    // files, err := force.Metadata.Retrieve(query)
+	// if err != nil {
+	// 	fmt.Printf("Encountered an error with retrieve...\n")
+	// 	ErrorAndExit(err.Error())
+	// }
+
+    root := DetermineProjectPath("joist/src") // lol
+
+    files := make(ForceMetadataFiles)
+
+    err := filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
+        if f.Mode().IsRegular() {
+            if f.Name() != ".DS_Store" {
+                data, err := ioutil.ReadFile(path)
+                if err != nil {
+                    ErrorAndExit(err.Error())
+                }
+                files[strings.Replace(path, fmt.Sprintf("%s%s", root, string(os.PathSeparator)), "", -1)] = data
+            }
+        }
+        return nil
+	})
 
     // now, we want to generate a destructiveChanges.xml.  It's in
     // the same format as package.xml, so we'll borrow the types
@@ -69,8 +92,6 @@ func runWipe(cmd *Command, args[]string) {
         Members: make([]string, 0),
     }
 
-
-
     // now, the only way to infer the resources it determine it from the regularly-formatted
     // names of metadata items that were returned to us in a the package (the Metadata API actually
     // returned a ZIP file)
@@ -81,7 +102,7 @@ func runWipe(cmd *Command, args[]string) {
     }
 
     for name, _ := range files {
-        //fmt.Printf("%s\n", name)
+        // fmt.Printf("%s\n", name)
         MatchedName := ApexClassNameScraper.FindStringSubmatch(name)
 
         //spew.Printf("shitpoop: %v\n", MatchedName)
@@ -109,7 +130,7 @@ func runWipe(cmd *Command, args[]string) {
 
     byteXML, _ := xml.MarshalIndent(DestructiveChanges, "", "    ")
     byteXML = append([]byte(xml.Header), byteXML...)
-    //fmt.Printf("Got XML: %s\n", string(byteXML))
+    fmt.Printf("Generated destructiveChanges.xml: %s\n", string(byteXML))
 
     var DeploymentOptions ForceDeployOptions
     DeploymentOptions.AllowMissingFiles = false
