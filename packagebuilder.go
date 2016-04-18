@@ -203,10 +203,14 @@ func (pb *PackageBuilder) addDestructiveChanges(fpath string) (err error) {
 		return
 	}
 
-	frel, _ := filepath.Rel(filepath.Dir(fpath), fpath)
-	pb.Files[frel] = fdata
-
+	pb.AddDestructiveChangesData(fdata)
 	return
+}
+
+// AddDestructiveChangesData allows you to directly add a Destructive Changes XML
+// to this package..
+func (pb *PackageBuilder) AddDestructiveChangesData(fdata []byte) {
+	pb.Files["destructiveChanges.xml"] = fdata
 }
 
 func (pb *PackageBuilder) contains(members []string, name string) bool {

@@ -133,7 +133,7 @@ func runWipe(cmd *Command, args[]string) {
     fmt.Printf("Generated destructiveChanges.xml: %s\n", string(byteXML))
 
     var DeploymentOptions ForceDeployOptions
-    DeploymentOptions.AllowMissingFiles = false
+    DeploymentOptions.AllowMissingFiles = true
 	DeploymentOptions.AutoUpdatePackage = false
 	DeploymentOptions.CheckOnly = true // lol
 	DeploymentOptions.IgnoreWarnings = false
@@ -141,19 +141,16 @@ func runWipe(cmd *Command, args[]string) {
 	DeploymentOptions.RollbackOnError = true
 	DeploymentOptions.TestLevel = "RunLocalTests"
 
-    destructiveChangesPackage := make(ForceMetadataFiles)
-    destructiveChangesPackage["destructiveChanges.xml"] = byteXML
+    packageBuilder := NewPushBuilder()
+    packageBuilder.AddDestructiveChangesData(byteXML)
+
 
     fmt.Printf("Now deploying destructiveChanges.xml...")
 
-    _, err = force.Metadata.Deploy(destructiveChangesPackage, DeploymentOptions)
+    _, err = force.Metadata.Deploy(packageBuilder.ForceMetadataFiles(), DeploymentOptions)
 	//problems := result.Details.ComponentFailures
 	//successes := result.Details.ComponentSuccesses
 	if err != nil {
 		ErrorAndExit(err.Error())
 	}
-    // destr
-
-
-
 }
