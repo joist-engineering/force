@@ -88,6 +88,7 @@ func runExport(cmd *Command, args []string) {
 		{Name: "Flow", Members: []string{"*"}},
 		{Name: "Folder", Members: []string{"*"}},
 		{Name: "ForecastingSettings", Members: []string{"*"}},
+		{Name: "GlobalPicklist", Members: []string{"*"}},
 		{Name: "Group", Members: []string{"*"}},
 		{Name: "HomePageComponent", Members: []string{"*"}},
 		{Name: "HomePageLayout", Members: []string{"*"}},
