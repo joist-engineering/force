@@ -39,29 +39,71 @@ Examples:
 // https://developer.salesforce.com/docs/atlas.en-us.daas.meta/daas/daas_destructive_changes.htm
 
 
+func metadataEnumerator(files ForceMetadataFiles, metadataName string, metadataFolderPath string, metadataFileExtension string, ignoreRegex string) MetaType {
+    ApexClassTypeEntry := MetaType{
+        Name: metadataName,
+        Members: make([]string, 0),
+    }
+
+    // now, the only way to infer the resources it determine it from the regularly-formatted
+    // names of metadata items that were returned to us in a the package (the Metadata API actually
+    // returned a ZIP file)
+    // compile a regex:
+    ApexClassNameScraper, err := regexp.Compile(fmt.Sprintf("^%s\\/(.*)\\.%s$", metadataFolderPath, metadataFileExtension))
+    if err != nil {
+		ErrorAndExit(err.Error())
+    }
+
+    IgnoreMatcher, err := regexp.Compile(ignoreRegex)
+    if err != nil {
+		ErrorAndExit(err.Error())
+    }
+
+    for name, _ := range files {
+        // fmt.Printf("%s\n", name)
+        MatchedName := ApexClassNameScraper.FindStringSubmatch(name)
+
+        //spew.Printf("shitpoop: %v\n", MatchedName)
+
+        if MatchedName != nil && len(MatchedName) == 2 {
+            ApexClassName := MatchedName[1]
+            // fmt.Printf("MATCHED AN APEX CLASS: %s\n", ApexClassName)
+
+            // now, check if it matches the ignore regex:
+            if !IgnoreMatcher.MatchString(ApexClassName) {
+                ApexClassTypeEntry.Members = append(ApexClassTypeEntry.Members, ApexClassName)
+            }
+        }
+    }
+
+    return ApexClassTypeEntry
+}
+
 func runWipe(cmd *Command, args[]string) {
     force, _ := ActiveForce()
 
 
     // a first attempt to discover files via metadata api, but, frankly,
-    // we may want to not touch any Apex classes not in our local project.
-    // query := ForceMetadataQuery{
-    //     {Name: "ApexClass", Members: []string{"*"}},
-	// 	//{Name: "ApexComponent", Members: []string{"*"}},
-	// 	// {Name: "ApexPage", Members: []string{"*"}},
-	// 	//{Name: "ApexTrigger", Members: []string{"*"}},
-    // }
-    // files, err := force.Metadata.Retrieve(query)
-	// if err != nil {
-	// 	fmt.Printf("Encountered an error with retrieve...\n")
-	// 	ErrorAndExit(err.Error())
-	// }
+    // we may want to not touch any Apex classes not in our local project. TODO make it switchable!
+    query := ForceMetadataQuery{
+        {Name: "ApexClass", Members: []string{"*"}},
+		//{Name: "ApexComponent", Members: []string{"*"}},
+		// {Name: "ApexPage", Members: []string{"*"}},
+		//{Name: "ApexTrigger", Members: []string{"*"}},
+        {Name: "FlowDefinition", Members: []string{"*"}},
+        {Name: "Flow", Members: []string{"*"}},
+    }
+    salesforceSideFiles, err := force.Metadata.Retrieve(query)
+	if err != nil {
+		fmt.Printf("Encountered an error with retrieve...\n")
+		ErrorAndExit(err.Error())
+	}
 
     root := DetermineProjectPath("joist/src") // lol
 
     files := make(ForceMetadataFiles)
 
-    err := filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
+    err = filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
         if f.Mode().IsRegular() {
             if f.Name() != ".DS_Store" {
                 data, err := ioutil.ReadFile(path)
@@ -87,44 +129,14 @@ func runWipe(cmd *Command, args[]string) {
 
     DestructiveChanges.Types = make([]MetaType, 0)
 
-    ApexClassTypeEntry := MetaType{
-        Name: "ApexClass",
-        Members: make([]string, 0),
-    }
+    // shit. looks like deletes have to be ordered by dependencies in the XML file, since it's all just processed as dumb commands.
 
-    // now, the only way to infer the resources it determine it from the regularly-formatted
-    // names of metadata items that were returned to us in a the package (the Metadata API actually
-    // returned a ZIP file)
-    // compile a regex:
-    ApexClassNameScraper, err := regexp.Compile("^classes\\/(.*)\\.cls$")
-    if err != nil {
-		ErrorAndExit(err.Error())
-    }
-
-    for name, _ := range files {
-        // fmt.Printf("%s\n", name)
-        MatchedName := ApexClassNameScraper.FindStringSubmatch(name)
-
-        //spew.Printf("shitpoop: %v\n", MatchedName)
-
-        if MatchedName != nil && len(MatchedName) == 2 {
-            ApexClassName := MatchedName[1]
-            // fmt.Printf("MATCHED AN APEX CLASS: %s\n", ApexClassName)
-            ApexClassTypeEntry.Members = append(ApexClassTypeEntry.Members, ApexClassName)
-        }
-
-        // ^classes\/(.)*.cls
+    DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS"))
+    DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "Flow", "flows", "flow", "bogusbogusbogusbogusbogusbogus"))
+    // DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "FlowDefinition", "flowDefinitions", "flowDefinition"))
 
 
-        // now split the bastard:
-        //baseFile := strings.SplitAfter(name, "/")[1]
-
-        //fmt.Printf("... which is actually %s\n", baseFile)
-
-
-    }
-
-    DestructiveChanges.Types = append(DestructiveChanges.Types, ApexClassTypeEntry)
+    // TODO prompt the user with a list of all files that will be deleted!
 
     // spew.Dump(DestructiveChanges)
 
