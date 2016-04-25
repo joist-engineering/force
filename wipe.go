@@ -70,6 +70,7 @@ func metadataEnumerator(files ForceMetadataFiles, metadataName string, metadataF
             // fmt.Printf("MATCHED AN APEX CLASS: %s\n", ApexClassName)
 
             // now, check if it matches the ignore regex:
+            // fmt.Printf("TESTING IF STRING MATCHES: %s\n", ApexClassName)
             if !IgnoreMatcher.MatchString(ApexClassName) {
                 ApexClassTypeEntry.Members = append(ApexClassTypeEntry.Members, ApexClassName)
             }
@@ -89,7 +90,7 @@ func runWipe(cmd *Command, args[]string) {
         {Name: "ApexClass", Members: []string{"*"}},
 		//{Name: "ApexComponent", Members: []string{"*"}},
 		// {Name: "ApexPage", Members: []string{"*"}},
-		//{Name: "ApexTrigger", Members: []string{"*"}},
+		{Name: "ApexTrigger", Members: []string{"*"}},
         {Name: "FlowDefinition", Members: []string{"*"}},
         {Name: "Flow", Members: []string{"*"}},
     }
@@ -131,9 +132,17 @@ func runWipe(cmd *Command, args[]string) {
 
     // shit. looks like deletes have to be ordered by dependencies in the XML file, since it's all just processed as dumb commands.
 
-    DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS"))
+    // DEACTIVATE ALL FLOWS
+    // DELETE ALL VISUALFORCE PAGES (and put up empty ones to work around limitation of at least 1 layout must be present)
+    DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "ApexTrigger", "triggers", "trigger", "^DS"))
+    DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS|^test_DS"))
     DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "Flow", "flows", "flow", "bogusbogusbogusbogusbogusbogus"))
     // DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "FlowDefinition", "flowDefinitions", "flowDefinition"))
+
+    // OTHER DEPLOY STEPS:
+
+    // DELETE ALL FLOWS
+    //
 
 
     // TODO prompt the user with a list of all files that will be deleted!
