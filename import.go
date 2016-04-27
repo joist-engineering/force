@@ -159,7 +159,6 @@ func runImport(cmd *Command, args []string) {
 		for name, env := range environmentConfig.Environments {
 			envCopy := env
 			if force.Credentials.InstanceUrl == env.InstanceHost {
-				fmt.Printf(".. IT FUCKING MATCHED\n")
 				foundEnvironment = &envCopy
 				foundEnvironment.Name = name
 			}
@@ -181,8 +180,6 @@ func runImport(cmd *Command, args []string) {
 			files[name] = []byte(contentsUnderProcessing)
 		}
 	}
-
-	os.Exit(0)
 
 	// Now to handle the metadata types that Salesforce has implemented their own versioning regimes for,
 	// do a retrieval of the current content of the environment.
@@ -268,13 +265,9 @@ func runImport(cmd *Command, args []string) {
 				ErrorAndExit(err.Error())
 			}
 
-			fmt.Printf("FOUND FLOW VERSION: %s version %d\n", name, versionNumber)
-
 			if flowDefinition, present := state.InactiveFlows[name]; present {
-				fmt.Printf("... it's for an inactive flowdefinition\n")
 				flowDefinition.AllVersions[versionNumber] = version
 			} else if flowDefinition, present := state.ActiveFlows[name]; present {
-				fmt.Printf("... it's for an active flow definition!\n")
 				flowDefinition.AllVersions[versionNumber] = version
 				// set the FlowContent value for the version we have here if it's indeed the active one:
 				if state.ActiveFlows[name].ActiveVersion == versionNumber {
@@ -322,14 +315,14 @@ func runImport(cmd *Command, args []string) {
 			// this file is not an active flow in the source.  no point at all in deploying it.
 			// so, remove it entirely from the package.
 			delete(files, fileName)
-			fmt.Printf("Removed %s because it's not an active flow in our source directory.\n", fileName)
+			fmt.Printf("Not bothering to deploy '%s' because it's not an active flow in our source directory.\n", fileName)
 		} else {
 			// it either an active flow or some other piece of metadata. awesome, we probably want to deploy it.  However, if it's already deployed
 			// on the target and active, then all that no-op would do is just cause sadness (SF does not allow
 			// for replacing flows)
 			if _, alreadyDeployed := activeFlowsInTargetByCompletePath[fileName]; alreadyDeployed {
 				// already deployed, don't need it.
-				fmt.Printf("Removed %s because it's already deployed and active on our target!\n", fileName)
+				fmt.Printf("Not going to deploy '%s' because it's already deployed and active on our target!\n", fileName)
 				delete(files, fileName)
 			}
 		}
