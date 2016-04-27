@@ -1,15 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
-	"strings"
-
 	"strconv"
+	"strings"
 )
 
 var cmdImport = &Command{
@@ -108,6 +108,17 @@ type FlowDefinition struct {
 	ActiveVersionNumber uint64 `xml:"activeVersionNumber"`
 }
 
+type EnvironmentConfigJson struct {
+	InstanceHost string            `json:"instance"`
+	Variables    map[string]string `json:"vars"`
+
+	Name string
+}
+
+type EnvironmentsConfigJson struct {
+	Environments map[string]EnvironmentConfigJson `json:"environments"`
+}
+
 func runImport(cmd *Command, args []string) {
 	if len(args) > 0 {
 		ErrorAndExit("Unrecognized argument: " + args[0])
@@ -136,6 +147,42 @@ func runImport(cmd *Command, args []string) {
 	if err != nil {
 		ErrorAndExit(err.Error())
 	}
+
+	if environmentJSON, present := files["environments.json"]; present {
+		// now, we want to implement our interpolation regime!
+		environmentConfig := EnvironmentsConfigJson{}
+		json.Unmarshal(environmentJSON, &environmentConfig)
+
+		// now, to determine the current environment.
+
+		var foundEnvironment *EnvironmentConfigJson
+		for name, env := range environmentConfig.Environments {
+			envCopy := env
+			if force.Credentials.InstanceUrl == env.InstanceHost {
+				fmt.Printf(".. IT FUCKING MATCHED\n")
+				foundEnvironment = &envCopy
+				foundEnvironment.Name = name
+			}
+		}
+		if foundEnvironment == nil {
+			ErrorAndExit("No project specified environment config matched SF logged in instance: '%s'\n", force.Credentials.InstanceUrl)
+		}
+		fmt.Printf("About to deploy to: %s at %s\n", foundEnvironment.Name, foundEnvironment.InstanceHost)
+
+		for name, contents := range files {
+			contentsUnderProcessing := string(contents)
+
+			for placeholder, value := range foundEnvironment.Variables {
+				token := fmt.Sprintf("$%s", placeholder)
+				contentsUnderProcessing = strings.Replace(contentsUnderProcessing, token, value, -1)
+			}
+
+			// it's safe to replace the value in the map!
+			files[name] = []byte(contentsUnderProcessing)
+		}
+	}
+
+	os.Exit(0)
 
 	// Now to handle the metadata types that Salesforce has implemented their own versioning regimes for,
 	// do a retrieval of the current content of the environment.
