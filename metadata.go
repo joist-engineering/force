@@ -2,7 +2,6 @@ package main
 
 import (
 	"archive/zip"
-	"bitbucket.org/pkg/inflect"
 	"bufio"
 	"bytes"
 	"encoding/base64"
@@ -14,9 +13,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"bitbucket.org/pkg/inflect"
 )
 
 type BigObject struct {
@@ -177,6 +179,17 @@ type ForceMetadataQueryElement struct {
 type ForceMetadataQuery []ForceMetadataQueryElement
 
 type ForceMetadataFiles map[string][]byte
+
+type ForceMetadataItem struct {
+	Name         string
+	Content      []byte
+	CompletePath string
+}
+
+type ForceMetadataFilesForType struct {
+	Members []ForceMetadataItem
+	Name    string
+}
 
 type ForceMetadata struct {
 	ApiVersion string
@@ -1252,6 +1265,56 @@ func (fm *ForceMetadata) ListConnectedApps() (apps ForceConnectedApps, err error
 	}
 	apps = res.ConnectedApps
 	return
+}
+
+func enumerateMetadataByType(files ForceMetadataFiles, metadataName string, metadataFolderPath string, metadataFileExtension string, ignoreRegex string) ForceMetadataFilesForType {
+	// ApexClassTypeEntry := MetaType{
+	// 	Name:    metadataName,
+	// 	Members: make([]string, 0),
+	// }
+
+	TypeFiles := ForceMetadataFilesForType{
+		Members: make([]ForceMetadataItem, 0),
+		Name:    metadataName,
+	}
+
+	// now, the only way to infer the resources it determine it from the regularly-formatted
+	// names of metadata items that were returned to us in a the package (the Metadata API actually
+	// returned a ZIP file)
+	// compile a regex:
+	ApexClassNameScraper, err := regexp.Compile(fmt.Sprintf("^%s\\/(.*)\\.%s$", metadataFolderPath, metadataFileExtension))
+	if err != nil {
+		ErrorAndExit(err.Error())
+	}
+
+	IgnoreMatcher, err := regexp.Compile(ignoreRegex)
+	if err != nil {
+		ErrorAndExit(err.Error())
+	}
+
+	for name, fdata := range files {
+		// fmt.Printf("%s\n", name)
+		MatchedName := ApexClassNameScraper.FindStringSubmatch(name)
+
+		//spew.Printf("shitpoop: %v\n", MatchedName)
+
+		if MatchedName != nil && len(MatchedName) == 2 {
+			ApexClassName := MatchedName[1]
+			// fmt.Printf("MATCHED AN APEX CLASS: %s\n", ApexClassName)
+
+			// now, check if it matches the ignore regex:
+			// fmt.Printf("TESTING IF STRING MATCHES: %s\n", ApexClassName)
+			if !IgnoreMatcher.MatchString(ApexClassName) {
+				TypeFiles.Members = append(TypeFiles.Members, ForceMetadataItem{
+					Name:    ApexClassName,
+					Content: fdata,
+					CompletePath: name,
+				})
+			}
+		}
+	}
+
+	return TypeFiles
 }
 
 func (fm *ForceMetadata) soapExecute(action, query string) (response []byte, err error) {

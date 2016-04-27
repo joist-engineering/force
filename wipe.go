@@ -2,13 +2,12 @@ package main
 
 import (
 	"fmt"
-    "strings"
-    "regexp"
-    // "github.com/davecgh/go-spew/spew"
-    "encoding/xml"
-    "path/filepath"
-    "os"
-    "io/ioutil"
+	"strings"
+	// "github.com/davecgh/go-spew/spew"
+	"encoding/xml"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 var cmdWipe = &Command{
@@ -38,123 +37,84 @@ Examples:
 // destructiveChanges
 // https://developer.salesforce.com/docs/atlas.en-us.daas.meta/daas/daas_destructive_changes.htm
 
+func runWipe(cmd *Command, args []string) {
+	force, _ := ActiveForce()
 
-func metadataEnumerator(files ForceMetadataFiles, metadataName string, metadataFolderPath string, metadataFileExtension string, ignoreRegex string) MetaType {
-    ApexClassTypeEntry := MetaType{
-        Name: metadataName,
-        Members: make([]string, 0),
-    }
-
-    // now, the only way to infer the resources it determine it from the regularly-formatted
-    // names of metadata items that were returned to us in a the package (the Metadata API actually
-    // returned a ZIP file)
-    // compile a regex:
-    ApexClassNameScraper, err := regexp.Compile(fmt.Sprintf("^%s\\/(.*)\\.%s$", metadataFolderPath, metadataFileExtension))
-    if err != nil {
-		ErrorAndExit(err.Error())
-    }
-
-    IgnoreMatcher, err := regexp.Compile(ignoreRegex)
-    if err != nil {
-		ErrorAndExit(err.Error())
-    }
-
-    for name, _ := range files {
-        // fmt.Printf("%s\n", name)
-        MatchedName := ApexClassNameScraper.FindStringSubmatch(name)
-
-        //spew.Printf("shitpoop: %v\n", MatchedName)
-
-        if MatchedName != nil && len(MatchedName) == 2 {
-            ApexClassName := MatchedName[1]
-            // fmt.Printf("MATCHED AN APEX CLASS: %s\n", ApexClassName)
-
-            // now, check if it matches the ignore regex:
-            // fmt.Printf("TESTING IF STRING MATCHES: %s\n", ApexClassName)
-            if !IgnoreMatcher.MatchString(ApexClassName) {
-                ApexClassTypeEntry.Members = append(ApexClassTypeEntry.Members, ApexClassName)
-            }
-        }
-    }
-
-    return ApexClassTypeEntry
-}
-
-func runWipe(cmd *Command, args[]string) {
-    force, _ := ActiveForce()
-
-
-    // a first attempt to discover files via metadata api, but, frankly,
-    // we may want to not touch any Apex classes not in our local project. TODO make it switchable!
-    query := ForceMetadataQuery{
-        {Name: "ApexClass", Members: []string{"*"}},
+	// a first attempt to discover files via metadata api, but, frankly,
+	// we may want to not touch any Apex classes not in our local project. TODO make it switchable!
+	query := ForceMetadataQuery{
+		{Name: "ApexClass", Members: []string{"*"}},
 		//{Name: "ApexComponent", Members: []string{"*"}},
 		// {Name: "ApexPage", Members: []string{"*"}},
 		{Name: "ApexTrigger", Members: []string{"*"}},
-        {Name: "FlowDefinition", Members: []string{"*"}},
-        {Name: "Flow", Members: []string{"*"}},
-    }
-    salesforceSideFiles, err := force.Metadata.Retrieve(query)
+		{Name: "FlowDefinition", Members: []string{"*"}},
+		{Name: "Flow", Members: []string{"*"}},
+	}
+	salesforceSideFiles, err := force.Metadata.Retrieve(query)
 	if err != nil {
 		fmt.Printf("Encountered an error with retrieve...\n")
 		ErrorAndExit(err.Error())
 	}
 
-    root := DetermineProjectPath("joist/src") // lol
+	root := DetermineProjectPath("joist/src") // lol
 
-    files := make(ForceMetadataFiles)
+	files := make(ForceMetadataFiles)
 
-    err = filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
-        if f.Mode().IsRegular() {
-            if f.Name() != ".DS_Store" {
-                data, err := ioutil.ReadFile(path)
-                if err != nil {
-                    ErrorAndExit(err.Error())
-                }
-                files[strings.Replace(path, fmt.Sprintf("%s%s", root, string(os.PathSeparator)), "", -1)] = data
-            }
-        }
-        return nil
+	// TODO this was copypasta'd from elsewhere.  Should be refactored.
+	err = filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
+		if f.Mode().IsRegular() {
+			if f.Name() != ".DS_Store" {
+				data, err := ioutil.ReadFile(path)
+				if err != nil {
+					ErrorAndExit(err.Error())
+				}
+				files[strings.Replace(path, fmt.Sprintf("%s%s", root, string(os.PathSeparator)), "", -1)] = data
+			}
+		}
+		return nil
 	})
 
-    // now, we want to generate a destructiveChanges.xml.  It's in
-    // the same format as package.xml, so we'll borrow the types
-    // from package builder.  (And then, we'll actually use
-    // we'll actually use packagebuilder to build a deployable
-    // package that contains just that destructiveChanges.xml)
+	// now, we want to generate a destructiveChanges.xml.  It's in
+	// the same format as package.xml, so we'll borrow the types
+	// from package builder.  (And then, we'll actually use
+	// we'll actually use packagebuilder to build a deployable
+	// package that contains just that destructiveChanges.xml)
 
-    DestructiveChanges := Package{
+	DestructiveChanges := Package{
 		Version: strings.TrimPrefix(apiVersion, "v"),
 		Xmlns:   "http://soap.sforce.com/2006/04/metadata",
 	}
 
-    DestructiveChanges.Types = make([]MetaType, 0)
+	DestructiveChanges.Types = make([]MetaType, 0)
 
-    // shit. looks like deletes have to be ordered by dependencies in the XML file, since it's all just processed as dumb commands.
+	// shit. looks like deletes have to be ordered by dependencies in the XML file, since it's all just processed as dumb commands.
 
-    // DEACTIVATE ALL FLOWS
-    // DELETE ALL VISUALFORCE PAGES (and put up empty ones to work around limitation of at least 1 layout must be present)
-    DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "ApexTrigger", "triggers", "trigger", "^DS"))
-    DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS|^test_DS"))
-    DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "Flow", "flows", "flow", "bogusbogusbogusbogusbogusbogus"))
-    // DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "FlowDefinition", "flowDefinitions", "flowDefinition"))
+	// DEACTIVATE ALL FLOWS
+	// DELETE ALL VISUALFORCE PAGES (and put up empty ones to work around limitation of at least 1 layout must be present)
+    filesForType := enumerateMetadataByType(salesforceSideFiles, "ApexTrigger", "triggers", "trigger", "^DS")
 
-    // OTHER DEPLOY STEPS:
+	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
+    filesForType = enumerateMetadataByType(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS|^test_DS")
+	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
+    filesForType = enumerateMetadataByType(salesforceSideFiles, "Flow", "flows", "flow", "bogusbogusbogusbogusbogusbogus")
+	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
+	// DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "FlowDefinition", "flowDefinitions", "flowDefinition"))
 
-    // DELETE ALL FLOWS
-    //
+	// OTHER DEPLOY STEPS:
 
+	// DELETE ALL FLOWS
+	//
 
-    // TODO prompt the user with a list of all files that will be deleted!
+	// TODO prompt the user with a list of all files that will be deleted!
 
-    // spew.Dump(DestructiveChanges)
+	// spew.Dump(DestructiveChanges)
 
-    byteXML, _ := xml.MarshalIndent(DestructiveChanges, "", "    ")
-    byteXML = append([]byte(xml.Header), byteXML...)
-    fmt.Printf("Generated destructiveChanges.xml: %s\n", string(byteXML))
+	byteXML, _ := xml.MarshalIndent(DestructiveChanges, "", "    ")
+	byteXML = append([]byte(xml.Header), byteXML...)
+	fmt.Printf("Generated destructiveChanges.xml: %s\n", string(byteXML))
 
-    var DeploymentOptions ForceDeployOptions
-    DeploymentOptions.AllowMissingFiles = true
+	var DeploymentOptions ForceDeployOptions
+	DeploymentOptions.AllowMissingFiles = true
 	DeploymentOptions.AutoUpdatePackage = false
 	DeploymentOptions.CheckOnly = true // lol
 	DeploymentOptions.IgnoreWarnings = false
@@ -162,13 +122,12 @@ func runWipe(cmd *Command, args[]string) {
 	DeploymentOptions.RollbackOnError = true
 	DeploymentOptions.TestLevel = "RunLocalTests"
 
-    packageBuilder := NewPushBuilder()
-    packageBuilder.AddDestructiveChangesData(byteXML)
+	packageBuilder := NewPushBuilder()
+	packageBuilder.AddDestructiveChangesData(byteXML)
 
+	fmt.Printf("Now deploying destructiveChanges.xml...")
 
-    fmt.Printf("Now deploying destructiveChanges.xml...")
-
-    _, err = force.Metadata.Deploy(packageBuilder.ForceMetadataFiles(), DeploymentOptions)
+	_, err = force.Metadata.Deploy(packageBuilder.ForceMetadataFiles(), DeploymentOptions)
 	//problems := result.Details.ComponentFailures
 	//successes := result.Details.ComponentSuccesses
 	if err != nil {

@@ -293,3 +293,16 @@ func getMetaForPath(path string) (metaName string, objectName string) {
 	objectName = fileName
 	return
 }
+
+func (files *ForceMetadataFilesForType) MetaType() MetaType {
+	metatype := MetaType{
+		Name:    files.Name,
+		Members: make([]string, len(files.Members)),
+	}
+
+	for _, item := range files.Members {
+		metatype.Members = append(metatype.Members, item.Name)
+	}
+
+	return metatype
+}
