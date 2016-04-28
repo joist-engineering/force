@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/heroku/force/util"
 
 	"bitbucket.org/pkg/inflect"
 )
@@ -519,7 +520,7 @@ func ValidateOptionsAndDefaults(typ string, fields map[string]reflect.StructFiel
 	for name, value := range options {
 		field, ok := fields[strings.ToLower(name)]
 		if !ok {
-			ErrorAndExit(fmt.Sprintf("validation error: %s:%s is not a valid option for field type %s", name, value, typ))
+			util.ErrorAndExit(fmt.Sprintf("validation error: %s:%s is not a valid option for field type %s", name, value, typ))
 		} else {
 			newOptions[field.Tag.Get("xml")] = options[name]
 		}
@@ -641,7 +642,7 @@ func (fm *ForceMetadata) ValidateFieldOptions(typ string, options map[string]str
 		s = reflect.ValueOf(&MasterDetailRequired{}).Elem()
 		break
 	default:
-		//ErrorAndExit(fmt.Sprintf("Field type %s is not implemented.", typ))
+		//util.ErrorAndExit(fmt.Sprintf("Field type %s is not implemented.", typ))
 		break
 	}
 
@@ -690,7 +691,7 @@ func (fm *ForceMetadata) CheckDeployStatus(id string) (results ForceCheckDeploym
 	}
 
 	if err = xml.Unmarshal(body, &deployResult); err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	results = deployResult.Results
@@ -962,7 +963,7 @@ func (fm *ForceMetadata) CreateCustomField(object, field, typ string, options ma
 			soapField += fmt.Sprintf("<%s>%s</%s>", key, value, key)
 		}
 	default:
-		ErrorAndExit("unable to create field type: %s", typ)
+		util.ErrorAndExit("unable to create field type: %s", typ)
 	}
 
 	//fmt.Println(fmt.Sprintf(soap, object, field, label, soapField))
@@ -1014,7 +1015,7 @@ func (fm *ForceMetadata) CreateBigObject(object BigObject) (err error) {
 	cmd.Stdout = os.Stdout
 	err = cmd.Run()
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	return
 }
@@ -1284,12 +1285,12 @@ func enumerateMetadataByType(files ForceMetadataFiles, metadataName string, meta
 	// compile a regex:
 	ApexClassNameScraper, err := regexp.Compile(fmt.Sprintf("^%s\\/(.*)\\.%s$", metadataFolderPath, metadataFileExtension))
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	IgnoreMatcher, err := regexp.Compile(ignoreRegex)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	for name, fdata := range files {

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"github.com/heroku/force/util"
 )
 
 ////////////////////////////////////////////////////////////////////////
@@ -263,7 +264,7 @@ func runSecurity(cmd *Command, args []string) {
 	// Step 1: retrieve the desired metadata
 	files, err := force.Metadata.Retrieve(query)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	// Step 2: go through the metadata and construct a list of Profile (profiles) and a CustomObject (theObject)
@@ -357,7 +358,7 @@ func runSecurity(cmd *Command, args []string) {
 
 	// Last step: write the file on disk and display it inside a Web browser
 	if err := ioutil.WriteFile(filepath.Join(root, "security.html"), []byte(HTMLoutput), 0644); err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	Open(filepath.Join(root, "security.html"))

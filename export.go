@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/heroku/force/util"
 )
 
 var cmdExport = &Command{
@@ -32,7 +34,7 @@ func runExport(cmd *Command, args []string) {
 	force, _ := ActiveForce()
 	sobjects, err := force.ListSobjects()
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	stdObjects := make([]string, 1, len(sobjects)+1)
 	stdObjects[0] = "*"
@@ -135,16 +137,16 @@ func runExport(cmd *Command, args []string) {
 	files, err := force.Metadata.Retrieve(query)
 	if err != nil {
 		fmt.Printf("Encountered and error with retrieve...\n")
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	for name, data := range files {
 		file := filepath.Join(root, name)
 		dir := filepath.Dir(file)
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			ErrorAndExit(err.Error())
+			util.ErrorAndExit(err.Error())
 		}
 		if err := ioutil.WriteFile(filepath.Join(root, name), data, 0644); err != nil {
-			ErrorAndExit(err.Error())
+			util.ErrorAndExit(err.Error())
 		}
 	}
 	fmt.Printf("Exported to %s\n", root)

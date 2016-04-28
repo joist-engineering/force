@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"github.com/heroku/force/project"
+	"github.com/heroku/force/util"
 )
 
 var cmdImport = &Command{
@@ -70,65 +71,22 @@ func init() {
 	cmdImport.Flag.Var(&testsToRun, "test", "Test(s) to run")
 }
 
-func DetermineProjectPath(directory string) string {
-	wd, _ := os.Getwd()
-	usr, err := user.Current()
-	var dir string
-
-	//Manually handle shell expansion short cut
-	if err != nil {
-		if strings.HasPrefix(directory, "~") {
-			ErrorAndExit("Cannot determine tilde expansion, please use relative or absolute path to directory.")
-		} else {
-			dir = directory
-		}
-	} else {
-		if strings.HasPrefix(directory, "~") {
-			dir = strings.Replace(directory, "~", usr.HomeDir, 1)
-		} else {
-			dir = directory
-		}
-	}
-
-	root := filepath.Join(wd, dir)
-
-	// Check for absolute path
-	if filepath.IsAbs(dir) {
-		root = dir
-	}
-
-	if _, err := os.Stat(filepath.Join(root, "package.xml")); os.IsNotExist(err) {
-		ErrorAndExit(" \n" + filepath.Join(root, "package.xml") + "\ndoes not exist")
-	}
-
-	return root
-}
-
+// FlowDefinition is an encoding/xml marshallable structure for
+// Salesforce FlowDefinition metadata.
 type FlowDefinition struct {
 	ActiveVersionNumber uint64 `xml:"activeVersionNumber"`
 }
 
-type EnvironmentConfigJson struct {
-	InstanceHost string            `json:"instance"`
-	Variables    map[string]string `json:"vars"`
-
-	Name string
-}
-
-type EnvironmentsConfigJson struct {
-	Environments map[string]EnvironmentConfigJson `json:"environments"`
-}
-
 func runImport(cmd *Command, args []string) {
 	if len(args) > 0 {
-		ErrorAndExit("Unrecognized argument: " + args[0])
+		util.ErrorAndExit("Unrecognized argument: " + args[0])
 	}
 
-	root := DetermineProjectPath(*directory)
+	root := project.DetermineProjectPath(*directory)
 
 	force, err := ActiveForce()
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	files := make(ForceMetadataFiles)
 
@@ -137,7 +95,7 @@ func runImport(cmd *Command, args []string) {
 			if f.Name() != ".DS_Store" {
 				data, err := ioutil.ReadFile(path)
 				if err != nil {
-					ErrorAndExit(err.Error())
+					util.ErrorAndExit(err.Error())
 				}
 				files[strings.Replace(path, fmt.Sprintf("%s%s", root, string(os.PathSeparator)), "", -1)] = data
 			}
@@ -145,17 +103,17 @@ func runImport(cmd *Command, args []string) {
 		return nil
 	})
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	if environmentJSON, present := files["environments.json"]; present {
 		// now, we want to implement our interpolation regime!
-		environmentConfig := EnvironmentsConfigJson{}
+		environmentConfig := project.EnvironmentsConfigJson{}
 		json.Unmarshal(environmentJSON, &environmentConfig)
 
 		// now, to determine the current environment.
 
-		var foundEnvironment *EnvironmentConfigJson
+		var foundEnvironment *project.EnvironmentConfigJson
 		for name, env := range environmentConfig.Environments {
 			envCopy := env
 			if force.Credentials.InstanceUrl == env.InstanceHost {
@@ -164,7 +122,7 @@ func runImport(cmd *Command, args []string) {
 			}
 		}
 		if foundEnvironment == nil {
-			ErrorAndExit("No project specified environment config matched SF logged in instance: '%s'\n", force.Credentials.InstanceUrl)
+			util.ErrorAndExit("No project specified environment config matched SF logged in instance: '%s'\n", force.Credentials.InstanceUrl)
 		}
 		fmt.Printf("About to deploy to: %s at %s\n", foundEnvironment.Name, foundEnvironment.InstanceHost)
 
@@ -202,7 +160,7 @@ func runImport(cmd *Command, args []string) {
 	targetFlowsAndDefinitions, err := force.Metadata.Retrieve(query)
 	if err != nil {
 		fmt.Printf("Encountered an error with retrieve...\n")
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	type MetadataFlowState struct {
@@ -232,7 +190,7 @@ func runImport(cmd *Command, args []string) {
 			var res FlowDefinition
 
 			if err := xml.Unmarshal(item.Content, &res); err != nil {
-				ErrorAndExit(err.Error())
+				util.ErrorAndExit(err.Error())
 			}
 
 			if res.ActiveVersionNumber != 0 {
@@ -262,7 +220,7 @@ func runImport(cmd *Command, args []string) {
 			name := nameFragments[0]
 			versionNumber, err := strconv.ParseUint(nameFragments[len(nameFragments)-1], 10, 64)
 			if err != nil {
-				ErrorAndExit(err.Error())
+				util.ErrorAndExit(err.Error())
 			}
 
 			if flowDefinition, present := state.InactiveFlows[name]; present {
@@ -347,7 +305,7 @@ func runImport(cmd *Command, args []string) {
 	problems := result.Details.ComponentFailures
 	successes := result.Details.ComponentSuccesses
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	fmt.Printf("\nFailures - %d\n", len(problems))

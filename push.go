@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"github.com/heroku/force/util"
 	"time"
 )
 
@@ -111,7 +112,7 @@ func runPush(cmd *Command, args []string) {
 					validatePushByMetadataTypeCommand()
 					pushByMetadataType()
 				} else {
-					ErrorAndExit("The -type (-t) parameter is required.")
+					util.ErrorAndExit("The -type (-t) parameter is required.")
 					//isValidMetadataType()
 					//pushByName()
 					//validatePushByMetadataTypeCommand()
@@ -133,7 +134,7 @@ func pushByTypeAndPath() {
 	for _, name := range resourcepath {
 		fi, err := os.Stat(name)
 		if err != nil {
-			ErrorAndExit(err.Error())
+			util.ErrorAndExit(err.Error())
 		}
 		if fi.IsDir() {
 
@@ -152,7 +153,7 @@ func isValidMetadataType() {
 	ExitIfNoSourceDir(err)
 	metaFolder = findMetadataTypeFolder(metadataType, root)
 	if metaFolder == "" {
-		ErrorAndExit("No folders that contain %s metadata could be found.", metadataType)
+		util.ErrorAndExit("No folders that contain %s metadata could be found.", metadataType)
 	}
 }
 
@@ -170,7 +171,7 @@ func metadataExists() {
 			}
 		}
 		if !valid {
-			ErrorAndExit(message)
+			util.ErrorAndExit(message)
 		}
 	}
 }
@@ -186,7 +187,7 @@ func wildCardSearch(metaFolder string, name string) []string {
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	f := strings.Split(out.String(), "\n")
 	var ret []string
@@ -216,7 +217,7 @@ func pushPackage() {
 		zipResource(packageFolder, metadataName[0])
 		resourcepath.Set(packageFolder + ".resource")
 		//var dir, _ = os.Getwd();
-		//ErrorAndExit(fmt.Sprintf("No resource path sepcified. %s, %s", metadataName[0], dir))
+		//util.ErrorAndExit(fmt.Sprintf("No resource path sepcified. %s, %s", metadataName[0], dir))
 	}
 	deployPackage()
 }
@@ -387,11 +388,11 @@ func zipResource(path string, topLevelFolder string) {
 				}
 				fl, err := zipper.Create(filepath.Join(topLevelFolder, strings.Replace(path, startPath, "", -1)))
 				if err != nil {
-					ErrorAndExit(err.Error())
+					util.ErrorAndExit(err.Error())
 				}
 				_, err = fl.Write([]byte(file))
 				if err != nil {
-					ErrorAndExit(err.Error())
+					util.ErrorAndExit(err.Error())
 				}
 			}
 		}
@@ -452,10 +453,10 @@ func pushByName() {
 		return nil
 	})
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	if len(paths) == 0 {
-		ErrorAndExit("Could not find %#v ", metadataName)
+		util.ErrorAndExit("Could not find %#v ", metadataName)
 	}
 
 }
@@ -489,7 +490,7 @@ func pushByPaths(fpaths []string) {
 		t1 := time.Now()
 		fmt.Printf("The deployment took %v to run.\n", t1.Sub(t0))
 	} else {
-		ErrorAndExit("Could not add the following files:\n {}", strings.Join(badPaths, "\n"))
+		util.ErrorAndExit("Could not add the following files:\n {}", strings.Join(badPaths, "\n"))
 	}
 }
 
@@ -534,7 +535,7 @@ func deployOpts() *ForceDeployOptions {
 // Process and display the result of the push operation
 func processDeployResults(result ForceCheckDeploymentStatusResult, err error) {
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	problems := result.Details.ComponentFailures

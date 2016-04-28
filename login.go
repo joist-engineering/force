@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bgentry/speakeasy"
 	"net/url"
+	"github.com/heroku/force/util"
 )
 
 var cmdLogin = &Command{
@@ -69,14 +70,14 @@ func runLogin(cmd *Command, args []string) {
 			//need to determine the form of the endpoint
 			uri, err := url.Parse(*instance)
 			if err != nil {
-				ErrorAndExit("Unable to parse endpoint: %s", *instance)
+				util.ErrorAndExit("Unable to parse endpoint: %s", *instance)
 			}
 			// Could be short hand?
 			if uri.Host == "" {
 				uri, err = url.Parse(fmt.Sprintf("https://%s", *instance))
 				//fmt.Println(uri)
 				if err != nil {
-					ErrorAndExit("Could not identify host: %s", *instance)
+					util.ErrorAndExit("Could not identify host: %s", *instance)
 				}
 			}
 			CustomEndpoint = uri.Scheme + "://" + uri.Host
@@ -91,17 +92,17 @@ func runLogin(cmd *Command, args []string) {
 			var err error
 			*password, err = speakeasy.Ask("Password: ")
 			if err != nil {
-				ErrorAndExit(err.Error())
+				util.ErrorAndExit(err.Error())
 			}
 		}
 		_, err := ForceLoginAndSaveSoap(endpoint, *userName, *password)
 		if err != nil {
-			ErrorAndExit(err.Error())
+			util.ErrorAndExit(err.Error())
 		}
 	} else { // Do OAuth login
 		_, err := ForceLoginAndSave(endpoint)
 		if err != nil {
-			ErrorAndExit(err.Error())
+			util.ErrorAndExit(err.Error())
 		}
 	}
 }

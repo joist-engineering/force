@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"github.com/heroku/force/util"
 )
 
 // Structs for XML building
@@ -111,7 +112,7 @@ func (pb PackageBuilder) PackageXml() []byte {
 	byteXml, _ := xml.MarshalIndent(p, "", "    ")
 	byteXml = append([]byte(xml.Header), byteXml...)
 	//if err := ioutil.WriteFile("mypackage.xml", byteXml, 0644); err != nil {
-	//ErrorAndExit(err.Error())
+	//util.ErrorAndExit(err.Error())
 	//}
 	return byteXml
 }
@@ -239,10 +240,10 @@ func (pb *PackageBuilder) AddMetaToPackage(metaName string, name string) {
 func getMetaTypeFromPath(fpath string) (metaName string, name string) {
 	fpath, err := filepath.Abs(fpath)
 	if err != nil {
-		ErrorAndExit("Cound not find " + fpath)
+		util.ErrorAndExit("Cound not find " + fpath)
 	}
 	if _, err := os.Stat(fpath); err != nil {
-		ErrorAndExit("Cound not open " + fpath)
+		util.ErrorAndExit("Cound not open " + fpath)
 	}
 
 	// Get the metadata type and name for the file

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"github.com/heroku/force/util"
 )
 
 var cmdDataPipe = &Command{
@@ -30,7 +31,7 @@ Commands:
   create        creates a new dataPipe
   update        update a dataPipe
   delete        delete a datapipe
-  list          list all datapipes 
+  list          list all datapipes
   query         query for a specific datapipe(s)
   createjob     creates a new job for a specific datapipe
   listjobs      list the status of submitted jobs
@@ -114,20 +115,20 @@ func runDataPipe(cmd *Command, args []string) {
 		case "queryjob":
 			runDataPipelineQueryJob()
 		default:
-			ErrorAndExit("no such command: %s", args[0])
+			util.ErrorAndExit("no such command: %s", args[0])
 		}
 	}
 }
 
 func runDataPipelineJob() {
 	if len(dpname) == 0 {
-		ErrorAndExit("You need to provide the name of a pipeline to create a job for.")
+		util.ErrorAndExit("You need to provide the name of a pipeline to create a job for.")
 	}
 	force, _ := ActiveForce()
 	id := GetDataPipelineId(dpname)
 	_, err, _ := force.CreateDataPipelineJob(id)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	fmt.Printf("Successfully created DataPipeline job for %s\n", dpname)
 }
@@ -138,7 +139,7 @@ func runDataPipelineListJobs() {
 	force, _ := ActiveForce()
 	result, err := force.QueryDataPipelineJob(query)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	DisplayForceRecordsf(result.Records, "csv")
@@ -150,7 +151,7 @@ func runDataPipelineQueryJob() {
 	force, _ := ActiveForce()
 	result, err := force.QueryDataPipelineJob(query)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	DisplayForceRecordsf(result.Records, "csv")
@@ -158,12 +159,12 @@ func runDataPipelineQueryJob() {
 
 func runDataPipelineQuery() {
 	if len(query) == 0 {
-		ErrorAndExit("You have to supply a SOQL query using the -q flag.")
+		util.ErrorAndExit("You have to supply a SOQL query using the -q flag.")
 	}
 	force, _ := ActiveForce()
 	result, err := force.QueryDataPipeline(query)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	fmt.Println("Result: \n", result)
@@ -171,7 +172,7 @@ func runDataPipelineQuery() {
 
 func runDataPipelineCreate() {
 	if len(dpname) == 0 {
-		ErrorAndExit("You must specify a name for the datapipeline using the -n flag.")
+		util.ErrorAndExit("You must specify a name for the datapipeline using the -n flag.")
 	}
 	if len(masterlabel) == 0 {
 		masterlabel = dpname
@@ -180,28 +181,28 @@ func runDataPipelineCreate() {
 	force, _ := ActiveForce()
 	_, err, _ := force.CreateDataPipeline(dpname, masterlabel, apiversion, scriptcontent, scripttype)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	fmt.Printf("DataPipeline %s successfully created.\n", dpname)
 }
 
 func runDataPipelineUpdate() {
 	if len(dpname) == 0 {
-		ErrorAndExit("You must specify a name for the datapipeline using the -n flag.")
+		util.ErrorAndExit("You must specify a name for the datapipeline using the -n flag.")
 	}
 	if len(masterlabel) == 0 && len(scriptcontent) == 0 {
-		ErrorAndExit("You can change the master label or the script content.")
+		util.ErrorAndExit("You can change the master label or the script content.")
 	}
 
 	force, _ := ActiveForce()
 
 	result, err := force.GetDataPipeline(dpname)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	if len(result.Records) == 0 {
-		ErrorAndExit("No data pipeline found named " + dpname)
+		util.ErrorAndExit("No data pipeline found named " + dpname)
 	}
 	for _, record := range result.Records {
 		var id string
@@ -216,12 +217,12 @@ func runDataPipelineUpdate() {
 			fmt.Printf("file exists; processing...")
 			scriptcontent, err = readScriptFile(scriptcontent)
 			if err != nil {
-				ErrorAndExit(err.Error())
+				util.ErrorAndExit(err.Error())
 			}
 		}
 		err = force.UpdateDataPipeline(id, masterlabel, scriptcontent)
 		if err != nil {
-			ErrorAndExit(err.Error())
+			util.ErrorAndExit(err.Error())
 		}
 		fmt.Printf("%s successfully updated.\n", dpname)
 	}
@@ -238,11 +239,11 @@ func GetDataPipelineId(name string) (id string) {
 
 	result, err := force.GetDataPipeline(dpname)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	if len(result.Records) == 0 {
-		ErrorAndExit("No data pipeline found named " + dpname)
+		util.ErrorAndExit("No data pipeline found named " + dpname)
 	}
 
 	record := result.Records[0]
@@ -256,7 +257,7 @@ func runDataPipelineDelete() {
 	id := GetDataPipelineId(dpname)
 	err := force.DeleteDataPipeline(id)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	fmt.Printf("%s successfully deleted.\n", dpname)
 }
@@ -266,7 +267,7 @@ func runDataPipelineList() {
 	query = "SELECT Id, MasterLabel, DeveloperName, ScriptType FROM DataPipeline"
 	result, err := force.QueryDataPipeline(query)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	DisplayForceRecordsf(result.Records, format)

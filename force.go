@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"runtime"
 	"strings"
+	"github.com/heroku/force/util"
 )
 
 const (
@@ -237,7 +238,7 @@ func ForceSoapLogin(endpoint ForceEndpoint, username string, password string) (c
 	case EndpointCustom:
 		surl = fmt.Sprintf("%s/services/Soap/u/%s", CustomEndpoint, version)
 	default:
-		ErrorAndExit("Unable to login with SOAP. Unknown endpoint type")
+		util.ErrorAndExit("Unable to login with SOAP. Unknown endpoint type")
 	}
 
 	soap := NewSoap(surl, "", "")
@@ -249,7 +250,7 @@ func ForceSoapLogin(endpoint ForceEndpoint, username string, password string) (c
 	}
 	var fault SoapFault
 	if err = xml.Unmarshal(response, &fault); fault.Detail.ExceptionMessage != "" {
-		ErrorAndExit(fault.Detail.ExceptionCode + ": " + fault.Detail.ExceptionMessage)
+		util.ErrorAndExit(fault.Detail.ExceptionCode + ": " + fault.Detail.ExceptionMessage)
 	}
 	if err = xml.Unmarshal(response, &result); err != nil {
 		return
@@ -302,7 +303,7 @@ func ForceLogin(endpoint ForceEndpoint) (creds ForceCredentials, err error) {
 	case EndpointCustom:
 		url = fmt.Sprintf("%s/services/oauth2/authorize?response_type=token&client_id=%s&redirect_uri=%s&state=%d&prompt=login", CustomEndpoint, ProductionClientId, Redir, port)
 	default:
-		ErrorAndExit("Unable to login with OAuth. Unknown endpoint type")
+		util.ErrorAndExit("Unable to login with OAuth. Unknown endpoint type")
 	}
 
 	err = Open(url)
@@ -491,7 +492,7 @@ func (f *Force) GetAuraBundlesList() (bundles AuraDefinitionBundleResult, err er
 func (f *Force) GetAuraBundle(bundleName string) (bundles AuraDefinitionBundleResult, definitions AuraDefinitionBundleResult, err error) {
 	bundles, err = f.GetAuraBundleByName(bundleName)
 	if len(bundles.Records) == 0 {
-		ErrorAndExit(fmt.Sprintf("There is no Aura bundle named %q", bundleName))
+		util.ErrorAndExit(fmt.Sprintf("There is no Aura bundle named %q", bundleName))
 	}
 	bundle := bundles.Records[0]
 	definitions, err = f.GetAuraBundleDefinition(bundle["Id"].(string))

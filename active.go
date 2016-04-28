@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"runtime"
 	"sort"
+	"github.com/heroku/force/util"
 )
 
 var cmdActive = &Command{
@@ -59,7 +60,7 @@ func runActive(cmd *Command, args []string) {
 			fmt.Printf("%s now active\n", account)
 			Config.Save("current", "account", account)
 		} else {
-			ErrorAndExit(fmt.Sprintf("no such account %s\n", account))
+			util.ErrorAndExit(fmt.Sprintf("no such account %s\n", account))
 		}
 	}
 }

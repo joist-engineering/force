@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/heroku/force/util"
 	"strconv"
 )
 
@@ -19,7 +20,7 @@ Examples:
 
   force test all
   force test Test1 Test2 Test3
-  force test -namespace=ns Test4 
+  force test -namespace=ns Test4
   force test -v Test1
 `,
 }
@@ -48,13 +49,13 @@ func RunTests(testRunner TestRunner, tests []string, namespace string) (output T
 
 func runTests(cmd *Command, args []string) {
 	if len(args) < 1 {
-		ErrorAndExit("must specify tests to run")
+		util.ErrorAndExit("must specify tests to run")
 	}
 	force, _ := ActiveForce()
 	output, err := RunTests(force.Partner, args, *namespaceTestFlag)
 	success := false
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	if verboselogging {
 		fmt.Println(output.Log)

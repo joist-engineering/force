@@ -56,6 +56,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"github.com/heroku/force/util"
 )
 
 var cmdBulk = &Command{
@@ -89,18 +90,18 @@ func runBulk(cmd *Command, args []string) {
 	if len(args) == 0 {
 		cmd.printUsage()
 	} else if len(args) == 1 {
-		ErrorAndExit("Invalid command")
+		util.ErrorAndExit("Invalid command")
 	} else if len(args) == 2 {
 		if args[0] == "insert" {
-			ErrorAndExit("Missing argument for insert")
+			util.ErrorAndExit("Missing argument for insert")
 		} else if args[0] == "update" {
-			ErrorAndExit("Missing argument for update")
+			util.ErrorAndExit("Missing argument for update")
 		} else if args[0] == "job" {
 			showJobDetails(args[1])
 		} else if args[0] == "batches" {
 			listBatches(args[1])
 		} else {
-			ErrorAndExit("Invalid command")
+			util.ErrorAndExit("Invalid command")
 		}
 	} else if len(args) == 3 {
 		if args[0] == "insert" {
@@ -111,7 +112,7 @@ func runBulk(cmd *Command, args []string) {
 			showBatchDetails(args[1], args[2])
 		} else if args[0] == "query" {
 			if args[1] == "retrieve" {
-				ErrorAndExit("Query retrieve requires a job id and a batch id")
+				util.ErrorAndExit("Query retrieve requires a job id and a batch id")
 			} else {
 				doBulkQuery(args[1], args[2], "CSV")
 			}
@@ -142,7 +143,7 @@ func doBulkQuery(objectType string, soql string, contenttype string) {
 	result, err := force.BulkQuery(soql, jobInfo.Id, contenttype)
 	if err != nil {
 		closeBulkJob(jobInfo.Id)
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	fmt.Println("Query Submitted")
 	fmt.Printf("To retrieve query status use\nforce bulk query status %s %s\n\n", jobInfo.Id, result.Id)
@@ -174,7 +175,7 @@ func retrieveBulkQuery(jobId string, batchId string) (resultIds []string) {
 
 	jobInfo, err := force.RetrieveBulkQuery(jobId, batchId)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
 	var resultList struct {
@@ -191,7 +192,7 @@ func retrieveBulkQueryResults(jobId string, batchId string, resultId string) (da
 
 	data, err := force.RetrieveBulkQueryResults(jobId, batchId, resultId)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	return
 }
@@ -217,7 +218,7 @@ func getBatchResults(jobId string, batchId string) {
 	data, err := force.RetrieveBulkBatchResults(jobId, batchId)
 	fmt.Println(data)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	return
 }
@@ -228,7 +229,7 @@ func getJobDetails(jobId string) (jobInfo JobInfo) {
 	jobInfo, err := force.GetJobInfo(jobId)
 
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	return
 }
@@ -239,7 +240,7 @@ func getBatches(jobId string) (batchInfos []BatchInfo) {
 	batchInfos, err := force.GetBatches(jobId)
 
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	return
 }
@@ -250,7 +251,7 @@ func getBatchDetails(jobId string, batchId string) (batchInfo BatchInfo) {
 	batchInfo, err := force.GetBatchInfo(jobId, batchId)
 
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	return
 }
@@ -258,12 +259,12 @@ func getBatchDetails(jobId string, batchId string) (batchInfo BatchInfo) {
 func createBulkInsertJob(csvFilePath string, objectType string, format string) {
 	jobInfo, err := createBulkJob(objectType, "insert", format)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	} else {
 		batchInfo, err := addBatchToJob(csvFilePath, jobInfo.Id)
 		if err != nil {
 			closeBulkJob(jobInfo.Id)
-			ErrorAndExit(err.Error())
+			util.ErrorAndExit(err.Error())
 		} else {
 			closeBulkJob(jobInfo.Id)
 			fmt.Printf("Job created ( %s ) - for job status use\n force bulk batch %s %s\n", jobInfo.Id, jobInfo.Id, batchInfo.Id)
@@ -274,12 +275,12 @@ func createBulkInsertJob(csvFilePath string, objectType string, format string) {
 func createBulkUpdateJob(csvFilePath string, objectType string, format string) {
 	jobInfo, err := createBulkJob(objectType, "update", format)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	} else {
 		batchInfo, err := addBatchToJob(csvFilePath, jobInfo.Id)
 		if err != nil {
 			closeBulkJob(jobInfo.Id)
-			ErrorAndExit(err.Error())
+			util.ErrorAndExit(err.Error())
 		} else {
 			closeBulkJob(jobInfo.Id)
 			fmt.Printf("Job created ( %s ) - for job status use\n force bulk batch %s %s\n", jobInfo.Id, jobInfo.Id, batchInfo.Id)
@@ -351,7 +352,7 @@ func closeBulkJob(jobId string) (jobInfo JobInfo, err error) {
 	`
 	jobInfo, err = force.CloseBulkJob(jobId, xml)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	return
 }

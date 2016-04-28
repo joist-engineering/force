@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"github.com/heroku/force/util"
+	project "github.com/heroku/force/project"
 )
 
 var cmdWipe = &Command{
@@ -53,10 +55,10 @@ func runWipe(cmd *Command, args []string) {
 	salesforceSideFiles, err := force.Metadata.Retrieve(query)
 	if err != nil {
 		fmt.Printf("Encountered an error with retrieve...\n")
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 
-	root := DetermineProjectPath("joist/src") // lol
+	root := project.DetermineProjectPath("joist/src") // lol
 
 	files := make(ForceMetadataFiles)
 
@@ -66,7 +68,7 @@ func runWipe(cmd *Command, args []string) {
 			if f.Name() != ".DS_Store" {
 				data, err := ioutil.ReadFile(path)
 				if err != nil {
-					ErrorAndExit(err.Error())
+					util.ErrorAndExit(err.Error())
 				}
 				files[strings.Replace(path, fmt.Sprintf("%s%s", root, string(os.PathSeparator)), "", -1)] = data
 			}
@@ -131,6 +133,6 @@ func runWipe(cmd *Command, args []string) {
 	//problems := result.Details.ComponentFailures
 	//successes := result.Details.ComponentSuccesses
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 }

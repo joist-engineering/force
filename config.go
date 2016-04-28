@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"github.com/heroku/force/util"
 	//"fmt"
 )
 
@@ -46,9 +47,9 @@ func GetSourceDir() (src string, err error) {
 func ExitIfNoSourceDir(err error) {
 	if err != nil {
 		if os.IsNotExist(err) {
-			ErrorAndExit("Current directory does not contain a metadata or src directory")
+			util.ErrorAndExit("Current directory does not contain a metadata or src directory")
 		}
 
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 }

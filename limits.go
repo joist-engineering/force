@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/heroku/force/util"
 	"sort"
 )
 
@@ -28,7 +29,7 @@ func runLimits(cmd *Command, args []string) {
 	result, err := force.GetLimits()
 
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	} else {
 		printLimits(result)
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"github.com/heroku/force/util"
 )
 
 var BatchInfoTemplate = `
@@ -40,7 +41,7 @@ func DisplayListMetadataResponseJson(resp ListMetadataResponse) {
 	sort.Sort(ByFullName(resp.Result))
 	b, err := json.MarshalIndent(resp.Result, "", "   ")
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	fmt.Printf("%s\n", string(b))
 }
@@ -72,7 +73,7 @@ func DisplayMetadataListJson(metadataObjects []DescribeMetadataObject) {
 
 	b, err := json.MarshalIndent(metadataObjects, "", "   ")
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	fmt.Printf("%s\n", string(b))
 }
@@ -136,7 +137,7 @@ func DisplayForceSobjectDescribe(sobject string) {
 	b := []byte(sobject)
 	err := json.Unmarshal(b, &d)
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	out, err := json.MarshalIndent(d, "", "    ")
 	fmt.Println(string(out))
@@ -160,7 +161,7 @@ func DisplayForceSobjectsJson(sobjects []ForceSobject) {
 	}
 	b, err := json.MarshalIndent(names, "", "   ")
 	if err != nil {
-		ErrorAndExit(err.Error())
+		util.ErrorAndExit(err.Error())
 	}
 	fmt.Printf("%s\n", string(b))
 }

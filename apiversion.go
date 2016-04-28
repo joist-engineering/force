@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/heroku/force/util"
 )
 
 var apiVersion = "v36.0"
@@ -35,6 +36,6 @@ func runApiVersion(cmd *Command, args []string) {
 	} else if len(args) == 0 {
 		fmt.Println(apiVersion)
 	} else {
-		ErrorAndExit("The apiversion command only accepts a single argument in the form of nn.0")
+		util.ErrorAndExit("The apiversion command only accepts a single argument in the form of nn.0")
 	}
 }

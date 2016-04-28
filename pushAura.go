@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"github.com/heroku/force/util"
 )
 
 var cmdPushAura = &Command{
@@ -32,12 +33,12 @@ func runPushAura(cmd *Command, args []string) {
 
 	if _, err := os.Stat(absPath); os.IsNotExist(err) {
 		fmt.Println(err.Error())
-		ErrorAndExit("File does not exist\n" + absPath)
+		util.ErrorAndExit("File does not exist\n" + absPath)
 	}
 
 	// Verify that the file is in an aura bundles folder
 	if !InAuraBundlesFolder(absPath) {
-		ErrorAndExit("File is not in an aura bundle folder (aura)")
+		util.ErrorAndExit("File is not in an aura bundle folder (aura)")
 	}
 
 	// See if this is a directory
@@ -84,7 +85,7 @@ func isValidAuraExtension(fname string) bool {
 	if ext == ".app" || ext == ".cmp" || ext == ".evt" || ext == ".intf" {
 		return true
 	} else {
-		ErrorAndExit("You need to create an application (.app) or component (.cmp) or and event (.evt) as the first item in your bundle.")
+		util.ErrorAndExit("You need to create an application (.app) or component (.cmp) or and event (.evt) as the first item in your bundle.")
 	}
 	return false
 }
@@ -112,12 +113,12 @@ func createNewAuraBundleAndDefinition(force Force, fname string) {
 				updateAuraDefinition(force, fname)
 				return
 			}
-			ErrorAndExit(err.Error())
+			util.ErrorAndExit(err.Error())
 		} else {
 			manifest.Id = bundle.Id
 			component, err, emessages := createBundleEntity(manifest, force, fname)
 			if err != nil {
-				ErrorAndExit(err.Error(), emessages[0].ErrorCode)
+				util.ErrorAndExit(err.Error(), emessages[0].ErrorCode)
 			}
 			createManifest(manifest, component, fname)
 		}
@@ -195,7 +196,7 @@ func updateAuraDefinition(force Force, fname string) {
 			mbody, _ := readFile(fname)
 			err := force.UpdateAuraComponent(map[string]string{"source": mbody}, component.ComponentId)
 			if err != nil {
-				ErrorAndExit(err.Error())
+				util.ErrorAndExit(err.Error())
 			}
 			fmt.Printf("Aura definition updated: %s\n", filepath.Base(fname))
 			return
@@ -203,7 +204,7 @@ func updateAuraDefinition(force Force, fname string) {
 	}
 	component, err, emessages := createBundleEntity(manifest, force, fname)
 	if err != nil {
-		ErrorAndExit(err.Error(), emessages[0].ErrorCode)
+		util.ErrorAndExit(err.Error(), emessages[0].ErrorCode)
 	}
 	updateManifest(manifest, component, fname)
 	fmt.Println("New component in the bundle")
@@ -264,7 +265,7 @@ func getFormatByresourcepath(resourcepath string) (format string, defType string
 			format = "XML"
 			defType = "DOCUMENTATION"
 		} else {
-			ErrorAndExit("Could not determine aura definition type.", fname)
+			util.ErrorAndExit("Could not determine aura definition type.", fname)
 		}
 	}
 	return

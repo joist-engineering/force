@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"github.com/heroku/force/util"
 	//"fmt"
 )
 
@@ -38,10 +39,10 @@ func init() {
 
 func runDescribe(cmd *Command, args []string) {
 	if len(metadataType) == 0 {
-		ErrorAndExit("You must specify metadata or sobject for description\nexample: force describe -t metadata")
+		util.ErrorAndExit("You must specify metadata or sobject for description\nexample: force describe -t metadata")
 	}
 	if metadataType != "metadata" && metadataType != "sobject" {
-		ErrorAndExit("Only metadata and sobject can be described")
+		util.ErrorAndExit("Only metadata and sobject can be described")
 	}
 
 	force, _ := ActiveForce()
@@ -51,7 +52,7 @@ func runDescribe(cmd *Command, args []string) {
 			// List all metadata
 			describe, err := force.Metadata.DescribeMetadata()
 			if err != nil {
-				ErrorAndExit(err.Error())
+				util.ErrorAndExit(err.Error())
 			}
 			if jsonout {
 				DisplayMetadataListJson(describe.MetadataObjects)
@@ -62,13 +63,13 @@ func runDescribe(cmd *Command, args []string) {
 			// List all metdata object of metaItem type
 			body, err := force.Metadata.ListMetadata(metaItem)
 			if err != nil {
-				ErrorAndExit(err.Error())
+				util.ErrorAndExit(err.Error())
 			}
 			var res struct {
 				Response ListMetadataResponse `xml:"Body>listMetadataResponse"`
 			}
 			if err = xml.Unmarshal(body, &res); err != nil {
-				ErrorAndExit(err.Error())
+				util.ErrorAndExit(err.Error())
 			}
 			if jsonout {
 				DisplayListMetadataResponseJson(res.Response)
@@ -89,7 +90,7 @@ func runDescribe(cmd *Command, args []string) {
 			// describe sobject
 			desc, err := force.DescribeSObject(metaItem)
 			if err != nil {
-				ErrorAndExit(err.Error())
+				util.ErrorAndExit(err.Error())
 			}
 			DisplayForceSobjectDescribe(desc)
 		}
