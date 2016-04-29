@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"github.com/heroku/force/project"
@@ -82,13 +79,13 @@ func runImport(cmd *Command, args []string) {
 		util.ErrorAndExit("Unrecognized argument: " + args[0])
 	}
 
-	project := project.LoadProject(*directory)
+	loadedProject := project.LoadProject(*directory)
 
 	force, err := ActiveForce()
 	if err != nil {
 		util.ErrorAndExit(err.Error())
 	}
-	files := project.EnumerateContents()
+	files := loadedProject.EnumerateContents()
 
 	if environmentJSON, present := files["environments.json"]; present {
 		// now, we want to implement our interpolation regime!
@@ -319,5 +316,5 @@ func runImport(cmd *Command, args []string) {
 			}
 		}
 	}
-	fmt.Printf("Imported from %s\n", root)
+	fmt.Printf("Imported from %s\n", loadedProject.LoadedFromPath())
 }

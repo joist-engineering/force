@@ -5,11 +5,7 @@ import (
 	"strings"
 	// "github.com/davecgh/go-spew/spew"
 	"encoding/xml"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"github.com/heroku/force/util"
-	project "github.com/heroku/force/project"
 )
 
 var cmdWipe = &Command{
@@ -57,24 +53,6 @@ func runWipe(cmd *Command, args []string) {
 		fmt.Printf("Encountered an error with retrieve...\n")
 		util.ErrorAndExit(err.Error())
 	}
-
-	root := project.DetermineProjectPath("joist/src") // lol
-
-	files := make(ForceMetadataFiles)
-
-	// TODO this was copypasta'd from elsewhere.  Should be refactored.
-	err = filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
-		if f.Mode().IsRegular() {
-			if f.Name() != ".DS_Store" {
-				data, err := ioutil.ReadFile(path)
-				if err != nil {
-					util.ErrorAndExit(err.Error())
-				}
-				files[strings.Replace(path, fmt.Sprintf("%s%s", root, string(os.PathSeparator)), "", -1)] = data
-			}
-		}
-		return nil
-	})
 
 	// now, we want to generate a destructiveChanges.xml.  It's in
 	// the same format as package.xml, so we'll borrow the types
