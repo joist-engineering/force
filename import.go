@@ -82,29 +82,13 @@ func runImport(cmd *Command, args []string) {
 		util.ErrorAndExit("Unrecognized argument: " + args[0])
 	}
 
-	root := project.DetermineProjectPath(*directory)
+	project := project.LoadProject(*directory)
 
 	force, err := ActiveForce()
 	if err != nil {
 		util.ErrorAndExit(err.Error())
 	}
-	files := make(ForceMetadataFiles)
-
-	err = filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
-		if f.Mode().IsRegular() {
-			if f.Name() != ".DS_Store" {
-				data, err := ioutil.ReadFile(path)
-				if err != nil {
-					util.ErrorAndExit(err.Error())
-				}
-				files[strings.Replace(path, fmt.Sprintf("%s%s", root, string(os.PathSeparator)), "", -1)] = data
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		util.ErrorAndExit(err.Error())
-	}
+	files := project.EnumerateContents()
 
 	if environmentJSON, present := files["environments.json"]; present {
 		// now, we want to implement our interpolation regime!
