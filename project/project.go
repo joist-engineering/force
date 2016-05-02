@@ -14,6 +14,7 @@ type project struct {
     path string
 
     // Lazily loaded project contents.
+    // file path -> file contents
     lazyProjectContents *map[string][]byte
 }
 
