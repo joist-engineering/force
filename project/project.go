@@ -18,19 +18,13 @@ type project struct {
     lazyProjectContents *map[string][]byte
 }
 
+// LoadProject loads the entire project and its config data in from the filesystem,
+// but note that it does so lazily.
 func LoadProject(directory string) *project {
     newProject := project{
         path: determineProjectPath(directory),
     }
     return &newProject
-}
-
-// EnvironmentsConfigJson is the root struct for JSON unmarshalling that an `environment.json` file
-// in your source tree root.  It can describe your SF environments and
-// other settings, particularly parameters that can be templated into your
-// Salesforce metadata files.
-type EnvironmentsConfigJson struct {
-	Environments map[string]EnvironmentConfigJson `json:"environments"`
 }
 
 func determineProjectPath(directory string) string {
@@ -71,6 +65,30 @@ func (project *project) LoadedFromPath() string {
 	return project.path
 }
 
+// ContentsWithAllTransformsApplied will give you all of the project contents
+func (project *project) ContentsWithAllTransformsApplied(environmentConfig *EnvironmentConfigJSON) *map[string][]byte {
+	transformedContents := project.EnumerateContents()
+
+	// first transform: string interpolation of the vars in the config:
+	for name, contents := range transformedContents {
+		contentsUnderProcessing := string(contents)
+		for placeholder, value := range environmentConfig.Variables {
+			token := fmt.Sprintf("$%s", placeholder)
+			contentsUnderProcessing = strings.Replace(contentsUnderProcessing, token, value, -1)
+		}
+		// it's safe to replace the value in the map!
+		transformedContents[name] = []byte(contentsUnderProcessing)
+	}
+
+	return &transformedContents
+}
+
+// EnumerateContents enumerates all of the Salesforce metadata files in the project directory
+// and loads them into memory, and returns them.  However, note that all relevant
+// transforms specified in the project configuration are not yet applied.  RunImport
+// uses ContentsWithAllTransformsApplied() for this task.
+//
+// Note that it only enumerates the filesystem once, and memoizes the result.
 func (project *project) EnumerateContents() map[string][]byte {
     root := project.path
 

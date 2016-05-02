@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"strconv"
@@ -87,37 +86,10 @@ func runImport(cmd *Command, args []string) {
 	}
 	files := loadedProject.EnumerateContents()
 
-	if environmentJSON, present := files["environments.json"]; present {
-		// now, we want to implement our interpolation regime!
-		environmentConfig := project.EnvironmentsConfigJson{}
-		json.Unmarshal(environmentJSON, &environmentConfig)
+	if projectEnvironmentConfig := loadedProject.GetEnvironmentConfigForActiveEnvironment(force.Credentials.InstanceUrl); projectEnvironmentConfig != nil {
+		fmt.Printf("About to deploy to: %s at %s\n", projectEnvironmentConfig.Name, projectEnvironmentConfig.InstanceHost)
 
-		// now, to determine the current environment.
-
-		var foundEnvironment *project.EnvironmentConfigJson
-		for name, env := range environmentConfig.Environments {
-			envCopy := env
-			if force.Credentials.InstanceUrl == env.InstanceHost {
-				foundEnvironment = &envCopy
-				foundEnvironment.Name = name
-			}
-		}
-		if foundEnvironment == nil {
-			util.ErrorAndExit("No project specified environment config matched SF logged in instance: '%s'\n", force.Credentials.InstanceUrl)
-		}
-		fmt.Printf("About to deploy to: %s at %s\n", foundEnvironment.Name, foundEnvironment.InstanceHost)
-
-		for name, contents := range files {
-			contentsUnderProcessing := string(contents)
-
-			for placeholder, value := range foundEnvironment.Variables {
-				token := fmt.Sprintf("$%s", placeholder)
-				contentsUnderProcessing = strings.Replace(contentsUnderProcessing, token, value, -1)
-			}
-
-			// it's safe to replace the value in the map!
-			files[name] = []byte(contentsUnderProcessing)
-		}
+		files = *loadedProject.ContentsWithAllTransformsApplied(projectEnvironmentConfig)
 	}
 
 	// Now to handle the metadata types that Salesforce has implemented their own versioning regimes for,
