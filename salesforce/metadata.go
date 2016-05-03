@@ -1265,10 +1265,8 @@ func (fm *ForceMetadata) ListAllMetadata() (describe MetadataDescribeResult, err
 }
 
 func (fm *ForceMetadata) ListConnectedApps() (apps ForceConnectedApps, err error) {
-	originalVersion := fm.ApiVersion
-	fm.ApiVersion = fm.ApiVersion
 	body, err := fm.ListMetadata("ConnectedApp")
-	fm.ApiVersion = originalVersion
+
 	if err != nil {
 		return
 	}
