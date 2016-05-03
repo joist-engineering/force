@@ -76,7 +76,7 @@ func runWipe(cmd *Command, args []string) {
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
     filesForType = salesforce.EnumerateMetadataByType(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS|^test_DS")
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
-    filesForType = salesforce.EnumerateMetadataByType(salesforceSideFiles, "Flow", "flows", "flow", "bogusbogusbogusbogusbogusbogus")
+    filesForType = salesforce.EnumerateMetadataByType(salesforceSideFiles, "Flow", "flows", "flow", "")
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
 	// DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "FlowDefinition", "flowDefinitions", "flowDefinition"))
 

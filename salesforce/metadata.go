@@ -489,6 +489,12 @@ type MasterDetail struct {
 	RelationshipName  string `xml:"relationshipName"`
 }
 
+// FlowDefinition is an encoding/xml marshallable structure for
+// Salesforce FlowDefinition metadata.
+type FlowDefinition struct {
+	ActiveVersionNumber uint64 `xml:"activeVersionNumber"`
+}
+
 // Example of how to use Go's reflection
 // Print the attributes of a Data Model
 func getAttributes(m interface{}) map[string]reflect.StructField {
@@ -656,6 +662,9 @@ func (fm *ForceMetadata) ValidateFieldOptions(typ string, options map[string]str
 }
 
 func NewForceMetadata(force *Force) (fm *ForceMetadata) {
+	if force.Credentials.ApiVersion == "" {
+		util.ErrorAndExit("API version not recorded for this account, please run `force login`")
+	}
 	fm = &ForceMetadata{ApiVersion: force.Credentials.ApiVersionNumber(), Force: force}
 	return
 }
@@ -1272,12 +1281,8 @@ func (fm *ForceMetadata) ListConnectedApps() (apps ForceConnectedApps, err error
 	return
 }
 
+// EnumerateMetadataByType allows for finding all metadata of a given type in a given ForceMetadataFiles map of Salesforce metadata.
 func EnumerateMetadataByType(files ForceMetadataFiles, metadataName string, metadataFolderPath string, metadataFileExtension string, ignoreRegex string) ForceMetadataFilesForType {
-	// ApexClassTypeEntry := MetaType{
-	// 	Name:    metadataName,
-	// 	Members: make([]string, 0),
-	// }
-
 	TypeFiles := ForceMetadataFilesForType{
 		Members: make([]ForceMetadataItem, 0),
 		Name:    metadataName,
@@ -1287,31 +1292,26 @@ func EnumerateMetadataByType(files ForceMetadataFiles, metadataName string, meta
 	// names of metadata items that were returned to us in a the package (the Metadata API actually
 	// returned a ZIP file)
 	// compile a regex:
-	ApexClassNameScraper, err := regexp.Compile(fmt.Sprintf("^%s\\/(.*)\\.%s$", metadataFolderPath, metadataFileExtension))
+	metadataNameScraper, err := regexp.Compile(fmt.Sprintf("^%s\\/(.*)\\.%s$", metadataFolderPath, metadataFileExtension))
 	if err != nil {
 		util.ErrorAndExit(err.Error())
 	}
 
-	IgnoreMatcher, err := regexp.Compile(ignoreRegex)
+	ignoreMatcher, err := regexp.Compile(ignoreRegex)
 	if err != nil {
 		util.ErrorAndExit(err.Error())
 	}
 
 	for name, fdata := range files {
-		// fmt.Printf("%s\n", name)
-		MatchedName := ApexClassNameScraper.FindStringSubmatch(name)
+		matchedPathFields := metadataNameScraper.FindStringSubmatch(name)
 
-		//spew.Printf("shitpoop: %v\n", MatchedName)
+		if matchedPathFields != nil && len(matchedPathFields) == 2 {
+			// grab the filename (minus path and extension), and that's the metadata object name itself:
+			metadataName := matchedPathFields[1]
 
-		if MatchedName != nil && len(MatchedName) == 2 {
-			ApexClassName := MatchedName[1]
-			// fmt.Printf("MATCHED AN APEX CLASS: %s\n", ApexClassName)
-
-			// now, check if it matches the ignore regex:
-			// fmt.Printf("TESTING IF STRING MATCHES: %s\n", ApexClassName)
-			if !IgnoreMatcher.MatchString(ApexClassName) {
+			if ignoreRegex != "" && !ignoreMatcher.MatchString(metadataName) {
 				TypeFiles.Members = append(TypeFiles.Members, ForceMetadataItem{
-					Name:    ApexClassName,
+					Name:    metadataName,
 					Content: fdata,
 					CompletePath: name,
 				})

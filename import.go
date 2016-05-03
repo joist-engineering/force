@@ -68,12 +68,6 @@ func init() {
 	cmdImport.Flag.Var(&testsToRun, "test", "Test(s) to run")
 }
 
-// FlowDefinition is an encoding/xml marshallable structure for
-// Salesforce FlowDefinition metadata.
-type FlowDefinition struct {
-	ActiveVersionNumber uint64 `xml:"activeVersionNumber"`
-}
-
 func runImport(cmd *Command, args []string) {
 	if len(args) > 0 {
 		util.ErrorAndExit("Unrecognized argument: " + args[0])
@@ -131,8 +125,8 @@ func runImport(cmd *Command, args []string) {
 		InactiveFlows   map[string]MetadataFlowState
 	}
 
-	determineEnvironmentState := func(poop salesforce.ForceMetadataFiles, environmentName string) EnvironmentFlowState {
-		flowDefinitions := salesforce.EnumerateMetadataByType(poop, "FlowDefinition", "flowDefinitions", "flowDefinition", "bogusbogusbogusbogus")
+	determineEnvironmentState := func(metadataFiles salesforce.ForceMetadataFiles, environmentName string) EnvironmentFlowState {
+		flowDefinitions := salesforce.EnumerateMetadataByType(metadataFiles, "FlowDefinition", "flowDefinitions", "flowDefinition", "")
 
 		state := EnvironmentFlowState{
 			EnvironmentName: environmentName,
@@ -141,7 +135,7 @@ func runImport(cmd *Command, args []string) {
 		}
 		// First, determine what flows are active.
 		for _, item := range flowDefinitions.Members {
-			var res FlowDefinition
+			var res salesforce.FlowDefinition
 
 			if err := xml.Unmarshal(item.Content, &res); err != nil {
 				util.ErrorAndExit(err.Error())
@@ -162,8 +156,8 @@ func runImport(cmd *Command, args []string) {
 			}
 		}
 
-		// now, enumerate the flows themselves and index them in:
-		flowVersions := salesforce.EnumerateMetadataByType(targetFlowsAndDefinitions, "Flow", "flows", "flow", "bogusbogusbogusbogusbogus")
+		// now, enumerate the flow versions themselves and index them in:
+		flowVersions := salesforce.EnumerateMetadataByType(targetFlowsAndDefinitions, "Flow", "flows", "flow", "")
 		for _, version := range flowVersions.Members {
 
 			// the version number is indicated by a normalized naming convention in the entries rendered by the

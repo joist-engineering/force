@@ -215,7 +215,6 @@ type BundleManifest struct {
 }
 
 func (creds *ForceCredentials) ApiVersionNumber() string {
-	fmt.Printf("ABOUT TO SPLIT VERSION NUMBER: '%s'\n", creds.ApiVersion)
 	return strings.Split(creds.ApiVersion, "v")[1]
 }
 
