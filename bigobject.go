@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"github.com/heroku/force/util"
-		. "github.com/heroku/force/salesforce"
+		"github.com/heroku/force/salesforce"
 )
 
 var cmdBigObject = &Command{
@@ -92,7 +92,7 @@ func runBigObject(cmd *Command, args []string) {
 	}
 }
 
-func parseField(fielddata string) (result BigObjectField) {
+func parseField(fielddata string) (result salesforce.BigObjectField) {
 	attrs := strings.Split(fielddata, "+")
 	for _, data := range attrs {
 		pair := strings.Split(data, ":")
@@ -120,7 +120,7 @@ func parseField(fielddata string) (result BigObjectField) {
 	return
 }
 
-func validateField(originField BigObjectField) (field BigObjectField) {
+func validateField(originField salesforce.BigObjectField) (field salesforce.BigObjectField) {
 	field = originField
 	if len(field.Type) == 0 {
 		util.ErrorAndExit("You need to indicate the type for field %s", field.FullName)
@@ -152,7 +152,7 @@ func validateField(originField BigObjectField) (field BigObjectField) {
 	return
 }
 
-func getBigObjectList(args []string) (l []ForceSobject) {
+func getBigObjectList(args []string) (l []salesforce.ForceSobject) {
 	force, _ := ActiveForce()
 	sobjects, err := force.ListSobjects()
 	if err != nil {
@@ -172,12 +172,12 @@ func getBigObjectList(args []string) (l []ForceSobject) {
 }
 
 func runBigObjectCreate(args []string) {
-	var fieldObjects = make([]BigObjectField, len(fields))
+	var fieldObjects = make([]salesforce.BigObjectField, len(fields))
 	for i, field := range fields {
 		fieldObjects[i] = parseField(field)
 	}
 
-	var object = BigObject{deploymentStatus, objectLabel, pluralLabel, fieldObjects}
+	var object = salesforce.BigObject{deploymentStatus, objectLabel, pluralLabel, fieldObjects}
 	if len(object.Label) == 0 {
 		util.ErrorAndExit("Please provide a label for your big object using the -l flag.")
 	}

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"github.com/heroku/force/util"
-	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 )
 
 ////////////////////////////////////////////////////////////////////////
@@ -248,10 +248,10 @@ func runSecurity(cmd *Command, args []string) {
 	wd, _ := os.Getwd()
 	root := filepath.Join(wd, ".")
 
-	var query ForceMetadataQuery
+	var query salesforce.ForceMetadataQuery
 
 	if len(args) == 1 {
-		query = ForceMetadataQuery{
+		query = salesforce.ForceMetadataQuery{
 			{Name: "Profile", Members: []string{"*"}},
 			{Name: "CustomObject", Members: args},
 		}
@@ -263,7 +263,7 @@ func runSecurity(cmd *Command, args []string) {
 	force, _ := ActiveForce()
 
 	// Step 1: retrieve the desired metadata
-	files, err := force.Metadata.Retrieve(query, ForceRetrieveOptions{})
+	files, err := force.Metadata.Retrieve(query, salesforce.ForceRetrieveOptions{})
 	if err != nil {
 		util.ErrorAndExit(err.Error())
 	}

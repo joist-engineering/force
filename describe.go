@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 	"github.com/heroku/force/util"
 	//"fmt"
-	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 )
 
 var cmdDescribe = &Command{
@@ -67,7 +67,7 @@ func runDescribe(cmd *Command, args []string) {
 				util.ErrorAndExit(err.Error())
 			}
 			var res struct {
-				Response ListMetadataResponse `xml:"Body>listMetadataResponse"`
+				Response salesforce.ListMetadataResponse `xml:"Body>listMetadataResponse"`
 			}
 			if err = xml.Unmarshal(body, &res); err != nil {
 				util.ErrorAndExit(err.Error())

@@ -27,6 +27,7 @@ const (
 	RedirectUriStaging = "https://force-cli.herokuapp.com/auth/callback"
 )
 
+// TODO: remove this global scope
 var CustomEndpoint = ``
 
 const (

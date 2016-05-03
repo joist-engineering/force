@@ -13,7 +13,7 @@ import (
 	"regexp"
 	"strings"
 	"github.com/heroku/force/util"
-		. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 	"time"
 )
 
@@ -150,8 +150,8 @@ func pushByTypeAndPath() {
 func isValidMetadataType() {
 	fmt.Printf("Validating and deploying push...\n")
 	// Look to see if we can find any resource for that metadata type
-	root, err := GetSourceDir()
-	ExitIfNoSourceDir(err)
+	root, err := salesforce.GetSourceDir()
+	salesforce.ExitIfNoSourceDir(err)
 	metaFolder = findMetadataTypeFolder(metadataType, root)
 	if metaFolder == "" {
 		util.ErrorAndExit("No folders that contain %s metadata could be found.", metadataType)
@@ -410,8 +410,8 @@ func pushByName() {
 
 	byName = true
 
-	root, err := GetSourceDir()
-	ExitIfNoSourceDir(err)
+	root, err := salesforce.GetSourceDir()
+	salesforce.ExitIfNoSourceDir(err)
 
 	// Find file by walking directory and ignoring extension
 	var paths []string
@@ -470,7 +470,7 @@ func pushByPath(fpath []string) {
 // Creates a package that includes everything in the passed in string slice
 // and then deploys the package to salesforce
 func pushByPaths(fpaths []string) {
-	pb := NewPushBuilder(apiVersion)
+	pb := salesforce.NewPushBuilder(apiVersion)
 
 	var badPaths []string
 	for _, fpath := range fpaths {
@@ -509,7 +509,7 @@ func deployPackage() {
 	return
 }
 
-func deployFiles(files ForceMetadataFiles) {
+func deployFiles(files salesforce.ForceMetadataFiles) {
 	force, _ := ActiveForce()
 	var DeploymentOptions = deployOpts()
 	result, err := force.Metadata.Deploy(files, *DeploymentOptions)
@@ -517,8 +517,8 @@ func deployFiles(files ForceMetadataFiles) {
 	return
 }
 
-func deployOpts() *ForceDeployOptions {
-	var opts ForceDeployOptions
+func deployOpts() *salesforce.ForceDeployOptions {
+	var opts salesforce.ForceDeployOptions
 	opts.AllowMissingFiles = *allowMissingFilesFlag
 	opts.AutoUpdatePackage = *autoUpdatePackageFlag
 	opts.CheckOnly = *checkOnlyFlag
@@ -534,7 +534,7 @@ func deployOpts() *ForceDeployOptions {
 }
 
 // Process and display the result of the push operation
-func processDeployResults(result ForceCheckDeploymentStatusResult, err error) {
+func processDeployResults(result salesforce.ForceCheckDeploymentStatusResult, err error) {
 	if err != nil {
 		util.ErrorAndExit(err.Error())
 	}

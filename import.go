@@ -7,7 +7,7 @@ import (
 	"strings"
 	"github.com/heroku/force/project"
 	"github.com/heroku/force/util"
-	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 )
 
 var cmdImport = &Command{
@@ -106,12 +106,12 @@ func runImport(cmd *Command, args []string) {
 	// NB use `func (fm *ForceMetadata) ListConnectedApps()` code as example for doing
 	// simple query of XML.
 
-	query := ForceMetadataQuery{
+	query := salesforce.ForceMetadataQuery{
 		{Name: "FlowDefinition", Members: []string{"*"}},
 		{Name: "Flow", Members: []string{"*"}},
 	}
 
-	targetFlowsAndDefinitions, err := force.Metadata.Retrieve(query, ForceRetrieveOptions{})
+	targetFlowsAndDefinitions, err := force.Metadata.Retrieve(query, salesforce.ForceRetrieveOptions{})
 	if err != nil {
 		fmt.Printf("Encountered an error with retrieve...\n")
 		util.ErrorAndExit(err.Error())
@@ -121,8 +121,8 @@ func runImport(cmd *Command, args []string) {
 		ActiveVersion uint64
 		Name          string
 
-		ActiveContent ForceMetadataItem
-		AllVersions   map[uint64]ForceMetadataItem
+		ActiveContent salesforce.ForceMetadataItem
+		AllVersions   map[uint64]salesforce.ForceMetadataItem
 	}
 
 	type EnvironmentFlowState struct {
@@ -131,8 +131,8 @@ func runImport(cmd *Command, args []string) {
 		InactiveFlows   map[string]MetadataFlowState
 	}
 
-	determineEnvironmentState := func(poop ForceMetadataFiles, environmentName string) EnvironmentFlowState {
-		flowDefinitions := EnumerateMetadataByType(poop, "FlowDefinition", "flowDefinitions", "flowDefinition", "bogusbogusbogusbogus")
+	determineEnvironmentState := func(poop salesforce.ForceMetadataFiles, environmentName string) EnvironmentFlowState {
+		flowDefinitions := salesforce.EnumerateMetadataByType(poop, "FlowDefinition", "flowDefinitions", "flowDefinition", "bogusbogusbogusbogus")
 
 		state := EnvironmentFlowState{
 			EnvironmentName: environmentName,
@@ -151,19 +151,19 @@ func runImport(cmd *Command, args []string) {
 				state.ActiveFlows[item.Name] = MetadataFlowState{
 					ActiveVersion: res.ActiveVersionNumber,
 					Name:          item.Name,
-					AllVersions:   make(map[uint64]ForceMetadataItem),
+					AllVersions:   make(map[uint64]salesforce.ForceMetadataItem),
 				}
 			} else {
 				state.InactiveFlows[item.Name] = MetadataFlowState{
 					ActiveVersion: res.ActiveVersionNumber,
 					Name:          item.Name,
-					AllVersions:   make(map[uint64]ForceMetadataItem),
+					AllVersions:   make(map[uint64]salesforce.ForceMetadataItem),
 				}
 			}
 		}
 
 		// now, enumerate the flows themselves and index them in:
-		flowVersions := EnumerateMetadataByType(targetFlowsAndDefinitions, "Flow", "flows", "flow", "bogusbogusbogusbogusbogus")
+		flowVersions := salesforce.EnumerateMetadataByType(targetFlowsAndDefinitions, "Flow", "flows", "flow", "bogusbogusbogusbogusbogus")
 		for _, version := range flowVersions.Members {
 
 			// the version number is indicated by a normalized naming convention in the entries rendered by the
@@ -215,7 +215,7 @@ func runImport(cmd *Command, args []string) {
 		activeFlowsInTargetByCompletePath[flowState.ActiveContent.CompletePath] = flowState
 	}
 
-	inactiveFlowVersionsInSourceByCompletePath := make(map[string]ForceMetadataItem)
+	inactiveFlowVersionsInSourceByCompletePath := make(map[string]salesforce.ForceMetadataItem)
 	for _, flowState := range sourceState.InactiveFlows {
 		for _, flowStateVersion := range flowState.AllVersions {
 			inactiveFlowVersionsInSourceByCompletePath[flowStateVersion.CompletePath] = flowStateVersion
@@ -242,7 +242,7 @@ func runImport(cmd *Command, args []string) {
 		// TODO alas, this negative filtering logic is a bit difficult to follow.
 	}
 
-	var DeploymentOptions ForceDeployOptions
+	var DeploymentOptions salesforce.ForceDeployOptions
 	DeploymentOptions.AllowMissingFiles = *allowMissingFilesFlag
 	DeploymentOptions.AutoUpdatePackage = *autoUpdatePackageFlag
 	DeploymentOptions.CheckOnly = *checkOnlyFlag

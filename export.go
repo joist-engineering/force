@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/heroku/force/util"
-	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 )
 
 var cmdExport = &Command{
@@ -45,7 +45,7 @@ func runExport(cmd *Command, args []string) {
 			stdObjects = append(stdObjects, name)
 		}
 	}
-	query := ForceMetadataQuery{
+	query := salesforce.ForceMetadataQuery{
 		{Name: "AccountSettings", Members: []string{"*"}},
 		{Name: "ActivitiesSettings", Members: []string{"*"}},
 		{Name: "AddressSettings", Members: []string{"*"}},
@@ -135,7 +135,7 @@ func runExport(cmd *Command, args []string) {
 		{Name: "ValidationRule", Members: []string{"*"}},
 		{Name: "Workflow", Members: []string{"*"}},
 	}
-	files, err := force.Metadata.Retrieve(query, ForceRetrieveOptions{
+	files, err := force.Metadata.Retrieve(query, salesforce.ForceRetrieveOptions{
 		PreserveZip: preserveZip,
 	})
 	if err != nil {

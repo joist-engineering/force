@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 )
 
 var apiVersion = "v36.0"
@@ -26,5 +26,5 @@ func init() {
 }
 
 func runVersion(cmd *Command, args []string) {
-	fmt.Println(Version)
+	fmt.Println(salesforce.Version)
 }

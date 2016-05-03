@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 	"github.com/heroku/force/util"
-	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 )
 
 var cmdSobject = &Command{
@@ -58,7 +58,7 @@ func runSobject(cmd *Command, args []string) {
 	}
 }
 
-func getSobjectList(args []string) (l []ForceSobject) {
+func getSobjectList(args []string) (l []salesforce.ForceSobject) {
 	force, _ := ActiveForce()
 	sobjects, err := force.ListSobjects()
 	if err != nil {
@@ -117,7 +117,7 @@ func runSobjectImport(args []string) {
 	// Need to read the file into a query result structure
 	data, err := ioutil.ReadAll(os.Stdin)
 
-	var query ForceQueryResult
+	var query salesforce.ForceQueryResult
 	json.Unmarshal(data, &query)
 	if err != nil {
 		util.ErrorAndExit(err.Error())

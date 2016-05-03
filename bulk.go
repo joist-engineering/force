@@ -57,7 +57,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"github.com/heroku/force/util"
-		. "github.com/heroku/force/salesforce"
+		"github.com/heroku/force/salesforce"
 )
 
 var cmdBulk = &Command{
@@ -224,7 +224,7 @@ func getBatchResults(jobId string, batchId string) {
 	return
 }
 
-func getJobDetails(jobId string) (jobInfo JobInfo) {
+func getJobDetails(jobId string) (jobInfo salesforce.JobInfo) {
 	force, _ := ActiveForce()
 
 	jobInfo, err := force.GetJobInfo(jobId)
@@ -235,7 +235,7 @@ func getJobDetails(jobId string) (jobInfo JobInfo) {
 	return
 }
 
-func getBatches(jobId string) (batchInfos []BatchInfo) {
+func getBatches(jobId string) (batchInfos []salesforce.BatchInfo) {
 	force, _ := ActiveForce()
 
 	batchInfos, err := force.GetBatches(jobId)
@@ -246,7 +246,7 @@ func getBatches(jobId string) (batchInfos []BatchInfo) {
 	return
 }
 
-func getBatchDetails(jobId string, batchId string) (batchInfo BatchInfo) {
+func getBatchDetails(jobId string, batchId string) (batchInfo salesforce.BatchInfo) {
 	force, _ := ActiveForce()
 
 	batchInfo, err := force.GetBatchInfo(jobId, batchId)
@@ -289,7 +289,7 @@ func createBulkUpdateJob(csvFilePath string, objectType string, format string) {
 	}
 }
 
-func addBatchToJob(csvFilePath string, jobId string) (result BatchInfo, err error) {
+func addBatchToJob(csvFilePath string, jobId string) (result salesforce.BatchInfo, err error) {
 
 	force, _ := ActiveForce()
 
@@ -322,13 +322,13 @@ func splitFileIntoBatches(filedata []byte) (batches []string) {
 	return
 }
 
-func getBatchInfo(jobId string, batchId string) (batchInfo BatchInfo, err error) {
+func getBatchInfo(jobId string, batchId string) (batchInfo salesforce.BatchInfo, err error) {
 	force, _ := ActiveForce()
 	batchInfo, err = force.GetBatchInfo(jobId, batchId)
 	return
 }
 
-func createBulkJob(objectType string, operation string, fileFormat string) (jobInfo JobInfo, err error) {
+func createBulkJob(objectType string, operation string, fileFormat string) (jobInfo salesforce.JobInfo, err error) {
 	force, _ := ActiveForce()
 
 	xml := `
@@ -343,7 +343,7 @@ func createBulkJob(objectType string, operation string, fileFormat string) (jobI
 	return
 }
 
-func closeBulkJob(jobId string) (jobInfo JobInfo, err error) {
+func closeBulkJob(jobId string) (jobInfo salesforce.JobInfo, err error) {
 	force, _ := ActiveForce()
 
 	xml := `

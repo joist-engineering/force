@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/heroku/force/util"
-	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 )
 
 var cmdRecord = &Command{
@@ -88,7 +88,7 @@ func runRecordCreate(args []string) {
 		util.ErrorAndExit("must specify object")
 	}
 	force, _ := ActiveForce()
-	attrs := ParseArgumentAttrs(args[1:])
+	attrs := salesforce.ParseArgumentAttrs(args[1:])
 	id, err, emessages := force.CreateRecord(args[0], attrs)
 	if err != nil {
 		util.ErrorAndExit(err.Error(), emessages[0].ErrorCode)
@@ -101,7 +101,7 @@ func runRecordUpdate(args []string) {
 		util.ErrorAndExit("must specify object and id")
 	}
 	force, _ := ActiveForce()
-	attrs := ParseArgumentAttrs(args[2:])
+	attrs := salesforce.ParseArgumentAttrs(args[2:])
 	err := force.UpdateRecord(args[0], args[1], attrs)
 	if err != nil {
 		util.ErrorAndExit(err.Error())

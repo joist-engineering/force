@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/heroku/force/util"
-	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 	"strconv"
 )
 
@@ -36,7 +36,7 @@ var (
 	verboselogging    bool
 )
 
-func RunTests(testRunner TestRunner, tests []string, namespace string) (output TestCoverage, err error) {
+func RunTests(testRunner salesforce.TestRunner, tests []string, namespace string) (output salesforce.TestCoverage, err error) {
 	output, err = testRunner.RunTests(tests, namespace)
 	if err != nil {
 		return

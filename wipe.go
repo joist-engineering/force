@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 	"strings"
-	// "github.com/davecgh/go-spew/spew"
 	"encoding/xml"
 	"github.com/heroku/force/util"
-	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 )
 
 var cmdWipe = &Command{
@@ -41,7 +40,7 @@ func runWipe(cmd *Command, args []string) {
 
 	// a first attempt to discover files via metadata api, but, frankly,
 	// we may want to not touch any Apex classes not in our local project. TODO make it switchable!
-	query := ForceMetadataQuery{
+	query := salesforce.ForceMetadataQuery{
 		{Name: "ApexClass", Members: []string{"*"}},
 		//{Name: "ApexComponent", Members: []string{"*"}},
 		// {Name: "ApexPage", Members: []string{"*"}},
@@ -49,7 +48,7 @@ func runWipe(cmd *Command, args []string) {
 		{Name: "FlowDefinition", Members: []string{"*"}},
 		{Name: "Flow", Members: []string{"*"}},
 	}
-	salesforceSideFiles, err := force.Metadata.Retrieve(query, ForceRetrieveOptions{})
+	salesforceSideFiles, err := force.Metadata.Retrieve(query, salesforce.ForceRetrieveOptions{})
 	if err != nil {
 		fmt.Printf("Encountered an error with retrieve...\n")
 		util.ErrorAndExit(err.Error())
@@ -61,23 +60,23 @@ func runWipe(cmd *Command, args []string) {
 	// we'll actually use packagebuilder to build a deployable
 	// package that contains just that destructiveChanges.xml)
 
-	DestructiveChanges := Package{
+	DestructiveChanges := salesforce.Package{
 		Version: strings.TrimPrefix(apiVersion, "v"),
 		Xmlns:   "http://soap.sforce.com/2006/04/metadata",
 	}
 
-	DestructiveChanges.Types = make([]MetaType, 0)
+	DestructiveChanges.Types = make([]salesforce.MetaType, 0)
 
 	// shit. looks like deletes have to be ordered by dependencies in the XML file, since it's all just processed as dumb commands.
 
 	// DEACTIVATE ALL FLOWS
 	// DELETE ALL VISUALFORCE PAGES (and put up empty ones to work around limitation of at least 1 layout must be present)
-    filesForType := EnumerateMetadataByType(salesforceSideFiles, "ApexTrigger", "triggers", "trigger", "^DS")
+    filesForType := salesforce.EnumerateMetadataByType(salesforceSideFiles, "ApexTrigger", "triggers", "trigger", "^DS")
 
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
-    filesForType = EnumerateMetadataByType(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS|^test_DS")
+    filesForType = salesforce.EnumerateMetadataByType(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS|^test_DS")
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
-    filesForType = EnumerateMetadataByType(salesforceSideFiles, "Flow", "flows", "flow", "bogusbogusbogusbogusbogusbogus")
+    filesForType = salesforce.EnumerateMetadataByType(salesforceSideFiles, "Flow", "flows", "flow", "bogusbogusbogusbogusbogusbogus")
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
 	// DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "FlowDefinition", "flowDefinitions", "flowDefinition"))
 
@@ -94,7 +93,7 @@ func runWipe(cmd *Command, args []string) {
 	byteXML = append([]byte(xml.Header), byteXML...)
 	fmt.Printf("Generated destructiveChanges.xml: %s\n", string(byteXML))
 
-	var DeploymentOptions ForceDeployOptions
+	var DeploymentOptions salesforce.ForceDeployOptions
 	DeploymentOptions.AllowMissingFiles = true
 	DeploymentOptions.AutoUpdatePackage = false
 	DeploymentOptions.CheckOnly = true // lol
@@ -103,7 +102,7 @@ func runWipe(cmd *Command, args []string) {
 	DeploymentOptions.RollbackOnError = true
 	DeploymentOptions.TestLevel = "RunLocalTests"
 
-	packageBuilder := NewPushBuilder(apiVersion)
+	packageBuilder := salesforce.NewPushBuilder(apiVersion)
 	packageBuilder.AddDestructiveChangesData(byteXML)
 
 	fmt.Printf("Now deploying destructiveChanges.xml...")

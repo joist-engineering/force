@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/heroku/force/util"
-	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 )
 
 // Brief comment to fire commit
@@ -186,7 +186,7 @@ func runDeleteAura() {
 		}
 	}
 }
-func deleteAuraDefinitionBundle(manifest BundleManifest) {
+func deleteAuraDefinitionBundle(manifest salesforce.BundleManifest) {
 	force, err := ActiveForce()
 	err = force.DeleteToolingRecord("AuraDefinitionBundle", manifest.Id)
 	if err != nil {
@@ -196,7 +196,7 @@ func deleteAuraDefinitionBundle(manifest BundleManifest) {
 	os.Remove(resourcepath[0])
 }
 
-func deleteAuraDefinition(manifest BundleManifest, key int) {
+func deleteAuraDefinition(manifest salesforce.BundleManifest, key int) {
 	force, err := ActiveForce()
 	err = force.DeleteToolingRecord("AuraDefinition", manifest.Files[key].ComponentId)
 	if err != nil {

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/heroku/force/util"
-	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 	"sort"
 )
 
@@ -26,7 +26,7 @@ func runLimits(cmd *Command, args []string) {
 
 	force, _ := ActiveForce()
 
-	var result ForceLimits
+	var result salesforce.ForceLimits
 	result, err := force.GetLimits()
 
 	if err != nil {
@@ -36,7 +36,7 @@ func runLimits(cmd *Command, args []string) {
 	}
 }
 
-func printLimits(result map[string]ForceLimit) {
+func printLimits(result map[string]salesforce.ForceLimit) {
 
 	//sort keys
 	var keys []string

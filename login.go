@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bgentry/speakeasy"
 	"net/url"
+
+	"github.com/bgentry/speakeasy"
+	"github.com/heroku/force/salesforce"
 	"github.com/heroku/force/util"
-		. "github.com/heroku/force/salesforce"
 )
 
 var cmdLogin = &Command{
@@ -38,14 +39,14 @@ var (
 )
 
 func runLogin(cmd *Command, args []string) {
-	var endpoint ForceEndpoint = EndpointProduction
+	var endpoint salesforce.ForceEndpoint = salesforce.EndpointProduction
 
 	// If no instance specified, try to get last endpoint used
 	if *instance == "" {
 		currentEndpoint, customUrl, err := CurrentEndpoint()
 		if err == nil && &currentEndpoint != nil {
 			endpoint = currentEndpoint
-			if currentEndpoint == EndpointCustom && customUrl != "" {
+			if currentEndpoint == salesforce.EndpointCustom && customUrl != "" {
 				*instance = customUrl
 			}
 		}
@@ -59,13 +60,13 @@ func runLogin(cmd *Command, args []string) {
 
 	switch *instance {
 	case "login":
-		endpoint = EndpointProduction
+		endpoint = salesforce.EndpointProduction
 	case "test":
-		endpoint = EndpointTest
+		endpoint = salesforce.EndpointTest
 	case "pre":
-		endpoint = EndpointPrerelease
+		endpoint = salesforce.EndpointPrerelease
 	case "mobile1":
-		endpoint = EndpointMobile1
+		endpoint = salesforce.EndpointMobile1
 	default:
 		if *instance != "" {
 			//need to determine the form of the endpoint
@@ -81,10 +82,11 @@ func runLogin(cmd *Command, args []string) {
 					util.ErrorAndExit("Could not identify host: %s", *instance)
 				}
 			}
-			CustomEndpoint = uri.Scheme + "://" + uri.Host
-			endpoint = EndpointCustom
+			// use a global side-effect to set the custom endpoint
+			salesforce.CustomEndpoint = uri.Scheme + "://" + uri.Host
+			endpoint = salesforce.EndpointCustom
 
-			fmt.Println("Loaded Endpoint: (" + CustomEndpoint + ")")
+			fmt.Println("Loaded Endpoint: (" + salesforce.CustomEndpoint + ")")
 		}
 	}
 
@@ -108,7 +110,7 @@ func runLogin(cmd *Command, args []string) {
 	}
 }
 
-func CurrentEndpoint() (endpoint ForceEndpoint, customUrl string, err error) {
+func CurrentEndpoint() (endpoint salesforce.ForceEndpoint, customUrl string, err error) {
 	creds, err := ActiveCredentials()
 	if err != nil {
 		return
@@ -118,14 +120,14 @@ func CurrentEndpoint() (endpoint ForceEndpoint, customUrl string, err error) {
 	return
 }
 
-func ForceSaveLogin(creds ForceCredentials) (username string, err error) {
+func ForceSaveLogin(creds salesforce.ForceCredentials) (username string, err error) {
 	// TODO find existing creds to rescue existing apiVersion:
-	creds.ApiVersion = DefaultApiVersion
+	creds.ApiVersion = salesforce.DefaultApiVersion
 
-	if existingCredsJSON, err := Config.Load("accounts", account); err == nil {
+	if existingCredsJSON, err := salesforce.Config.Load("accounts", account); err == nil {
 		// there's an existing account!  Copy over its api version (and any other
 		// settings we want to persist across re-logins:)
-		var existingCreds ForceCredentials
+		var existingCreds salesforce.ForceCredentials
 		if err = json.Unmarshal([]byte(existingCredsJSON), &existingCreds); err == nil {
 			if existingCreds.ApiVersion != "" {
 				fmt.Printf("We already have settings for a previous login of this account, carrying them over\n")
@@ -134,7 +136,7 @@ func ForceSaveLogin(creds ForceCredentials) (username string, err error) {
 		}
 	}
 
-	force := NewForce(creds)
+	force := salesforce.NewForce(creds)
 	login, err := force.Get(creds.Id)
 	if err != nil {
 		return
@@ -171,31 +173,31 @@ func ForceSaveLogin(creds ForceCredentials) (username string, err error) {
 	if err != nil {
 		return
 	}
-	Config.Save("accounts", username, string(body))
-	Config.Save("current", "account", username)
+	salesforce.Config.Save("accounts", username, string(body))
+	salesforce.Config.Save("current", "account", username)
 	return
 }
 
-func ForceLoginAndSaveSoap(endpoint ForceEndpoint, user_name string, password string) (username string, err error) {
-	creds, err := ForceSoapLogin(endpoint, apiVersion, user_name, password)
+func ForceLoginAndSaveSoap(endpoint salesforce.ForceEndpoint, user_name string, password string) (username string, err error) {
+	creds, err := salesforce.ForceSoapLogin(endpoint, apiVersion, user_name, password)
 	if err != nil {
 		return
 	}
 
-	creds.ApiVersion = DefaultApiVersion
+	creds.ApiVersion = salesforce.DefaultApiVersion
 
 	username, err = ForceSaveLogin(creds)
 	//fmt.Printf("Creds %+v", creds)
 	return
 }
 
-func ForceLoginAndSave(endpoint ForceEndpoint) (username string, err error) {
-	creds, err := ForceLogin(endpoint)
+func ForceLoginAndSave(endpoint salesforce.ForceEndpoint) (username string, err error) {
+	creds, err := salesforce.ForceLogin(endpoint)
 	if err != nil {
 		return
 	}
 
-	creds.ApiVersion = DefaultApiVersion
+	creds.ApiVersion = salesforce.DefaultApiVersion
 
 	username, err = ForceSaveLogin(creds)
 	return
