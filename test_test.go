@@ -5,18 +5,19 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/heroku/force/salesforce"
 )
 
 type stubTestRunner struct {
 }
 
-func (testRunner stubTestRunner) RunTests(tests []string, namespace string) (output TestCoverage, err error) {
+func (testRunner stubTestRunner) RunTests(tests []string, namespace string) (output salesforce.TestCoverage, err error) {
 	if tests[0] == "NoSuchTest" {
-		output = TestCoverage{NumberRun: 0, NumberFailures: 0}
+		output = salesforce.TestCoverage{NumberRun: 0, NumberFailures: 0}
 	} else if tests[0] == "Success" {
-		output = TestCoverage{NumberRun: 1, NumberFailures: 0}
+		output = salesforce.TestCoverage{NumberRun: 1, NumberFailures: 0}
 	} else {
-		output = TestCoverage{NumberRun: 1, NumberFailures: 1}
+		output = salesforce.TestCoverage{NumberRun: 1, NumberFailures: 1}
 	}
 	return
 }
