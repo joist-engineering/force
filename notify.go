@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/ViViDboarder/gotifier"
-"github.com/heroku/force/salesforce"
+	"github.com/heroku/force/salesforce"
 )
 
 var cmdNotifySet = &Command{

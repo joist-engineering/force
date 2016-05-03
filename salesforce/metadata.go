@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"github.com/heroku/force/util"
 
 	"bitbucket.org/pkg/inflect"
@@ -1311,8 +1312,8 @@ func EnumerateMetadataByType(files ForceMetadataFiles, metadataName string, meta
 
 			if ignoreRegex != "" && !ignoreMatcher.MatchString(metadataName) {
 				TypeFiles.Members = append(TypeFiles.Members, ForceMetadataItem{
-					Name:    metadataName,
-					Content: fdata,
+					Name:         metadataName,
+					Content:      fdata,
 					CompletePath: name,
 				})
 			}

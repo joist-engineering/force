@@ -1,30 +1,31 @@
 package project
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
-    util "github.com/heroku/force/util"
-	"io/ioutil"
-	"fmt"
+
+	util "github.com/heroku/force/util"
 )
 
 type project struct {
-    path string
+	path string
 
-    // Lazily loaded project contents.
-    // file path -> file contents
-    lazyProjectContents *map[string][]byte
+	// Lazily loaded project contents.
+	// file path -> file contents
+	lazyProjectContents *map[string][]byte
 }
 
 // LoadProject loads the entire project and its config data in from the filesystem,
 // but note that it does so lazily.
 func LoadProject(directory string) *project {
-    newProject := project{
-        path: determineProjectPath(directory),
-    }
-    return &newProject
+	newProject := project{
+		path: determineProjectPath(directory),
+	}
+	return &newProject
 }
 
 func determineProjectPath(directory string) string {
@@ -92,35 +93,35 @@ func (project *project) ContentsWithInternalTransformsApplied(environmentConfig 
 //
 // Note that it only enumerates the filesystem once, and memoizes the result.
 func (project *project) EnumerateContents() (enumeratedContents map[string][]byte) {
-    root := project.path
+	root := project.path
 
 	// compute and memoize as needed:
-    if(project.lazyProjectContents == nil) {
-        files := make(map[string][]byte)
+	if project.lazyProjectContents == nil {
+		files := make(map[string][]byte)
 
-        err := filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
-            if f.Mode().IsRegular() {
-                if f.Name() != ".DS_Store" {
-                    data, err := ioutil.ReadFile(path)
-                    if err != nil {
-                        util.ErrorAndExit(err.Error())
-                    }
-                    files[strings.Replace(path, fmt.Sprintf("%s%s", root, string(os.PathSeparator)), "", -1)] = data
-                }
-            }
-            return nil
-        })
-        if err != nil {
-            util.ErrorAndExit(err.Error())
-        }
+		err := filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
+			if f.Mode().IsRegular() {
+				if f.Name() != ".DS_Store" {
+					data, err := ioutil.ReadFile(path)
+					if err != nil {
+						util.ErrorAndExit(err.Error())
+					}
+					files[strings.Replace(path, fmt.Sprintf("%s%s", root, string(os.PathSeparator)), "", -1)] = data
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			util.ErrorAndExit(err.Error())
+		}
 
-        project.lazyProjectContents = &files
-    }
+		project.lazyProjectContents = &files
+	}
 
-    // we return a copy of the memoized data so consumers can't mutate state in the Project
-    // unexpectedly.
+	// we return a copy of the memoized data so consumers can't mutate state in the Project
+	// unexpectedly.
 	enumeratedContents = make(map[string][]byte)
-    for key, value := range *project.lazyProjectContents {
+	for key, value := range *project.lazyProjectContents {
 		enumeratedContents[key] = value
 	}
 	return

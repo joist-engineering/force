@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/heroku/force/project"
-	"github.com/heroku/force/util"
 	"github.com/heroku/force/salesforce"
+	"github.com/heroku/force/util"
 )
 
 var cmdImport = &Command{

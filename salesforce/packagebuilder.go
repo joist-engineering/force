@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
 	"github.com/heroku/force/util"
 )
 
@@ -80,9 +81,9 @@ var metapaths = []metapath{
 }
 
 type PackageBuilder struct {
-	IsPush   bool
-	Metadata map[string]MetaType
-	Files    ForceMetadataFiles
+	IsPush     bool
+	Metadata   map[string]MetaType
+	Files      ForceMetadataFiles
 	ApiVersion string
 }
 

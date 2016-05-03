@@ -1,10 +1,11 @@
 package salesforce
 
 import (
-	"github.com/devangel/config"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/devangel/config"
 	"github.com/heroku/force/util"
 	//"fmt"
 )

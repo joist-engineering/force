@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/heroku/force/util"
 	"fmt"
+
+	"github.com/heroku/force/util"
 )
 
 var cmdEventLogFile = &Command{

@@ -1,9 +1,10 @@
 package main
 
 import (
+	"testing"
+
 	"github.com/bmizerany/assert"
 	"github.com/devangel/config"
-	"testing"
 )
 
 var TestConfig = config.NewConfig("force")

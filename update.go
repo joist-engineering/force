@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/ddollar/dist"
-	"github.com/heroku/force/util"
 	. "github.com/heroku/force/salesforce"
+	"github.com/heroku/force/util"
 )
 
 var cmdUpdate = &Command{

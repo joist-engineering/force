@@ -1,9 +1,10 @@
 package salesforce_test
 
 import (
-	. "github.com/heroku/force"
 	"io/ioutil"
 	"os"
+
+	. "github.com/heroku/force"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

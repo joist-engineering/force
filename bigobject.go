@@ -1,13 +1,14 @@
 package main
 
 import (
-	"bitbucket.org/pkg/inflect"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"bitbucket.org/pkg/inflect"
+	"github.com/heroku/force/salesforce"
 	"github.com/heroku/force/util"
-		"github.com/heroku/force/salesforce"
 )
 
 var cmdBigObject = &Command{

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+
 	"github.com/heroku/force/util"
 )
 

@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	. "github.com/heroku/force/salesforce"
 	"github.com/heroku/force/util"
-		. "github.com/heroku/force/salesforce"
 )
 
 var cmdFetch = &Command{

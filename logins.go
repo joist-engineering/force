@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 	"text/tabwriter"
-		"github.com/heroku/force/salesforce"
 
+	"github.com/heroku/force/salesforce"
 )
 
 var cmdLogins = &Command{

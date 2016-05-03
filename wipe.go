@@ -1,11 +1,12 @@
 package main
 
 import (
+	"encoding/xml"
 	"fmt"
 	"strings"
-	"encoding/xml"
-	"github.com/heroku/force/util"
+
 	"github.com/heroku/force/salesforce"
+	"github.com/heroku/force/util"
 )
 
 var cmdWipe = &Command{
@@ -71,12 +72,12 @@ func runWipe(cmd *Command, args []string) {
 
 	// DEACTIVATE ALL FLOWS
 	// DELETE ALL VISUALFORCE PAGES (and put up empty ones to work around limitation of at least 1 layout must be present)
-    filesForType := salesforce.EnumerateMetadataByType(salesforceSideFiles, "ApexTrigger", "triggers", "trigger", "^DS")
+	filesForType := salesforce.EnumerateMetadataByType(salesforceSideFiles, "ApexTrigger", "triggers", "trigger", "^DS")
 
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
-    filesForType = salesforce.EnumerateMetadataByType(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS|^test_DS")
+	filesForType = salesforce.EnumerateMetadataByType(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS|^test_DS")
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
-    filesForType = salesforce.EnumerateMetadataByType(salesforceSideFiles, "Flow", "flows", "flow", "")
+	filesForType = salesforce.EnumerateMetadataByType(salesforceSideFiles, "Flow", "flows", "flow", "")
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
 	// DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "FlowDefinition", "flowDefinitions", "flowDefinition"))
 

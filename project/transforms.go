@@ -1,12 +1,13 @@
 package project
 
 import (
-    	"strconv"
+	"encoding/xml"
+	"fmt"
+	"strconv"
 	"strings"
-    "encoding/xml"
-    "fmt"
-    "github.com/heroku/force/util"
-    "github.com/heroku/force/salesforce"
+
+	"github.com/heroku/force/salesforce"
+	"github.com/heroku/force/util"
 )
 
 // TransformDeployToIncludeNewFlowVersionsOnly allows you to deploy only those flows that have changed,
@@ -16,14 +17,14 @@ import (
 // stymies attempts to track Salesforce metadata using external change management tools.  This transform works
 // around this by determining which versions have already been deployed and removes them from the package.
 func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byte, targetCurrentMetadata map[string][]byte) (transformedSourceMetadata map[string][]byte) {
-    // make a copy of the sourceMetadata so that we can return it without modifying the source at all.
-    transformedSourceMetadata = make(map[string][]byte)
-    for k, v := range sourceMetadata {
-        transformedSourceMetadata[k] = v
-    }
+	// make a copy of the sourceMetadata so that we can return it without modifying the source at all.
+	transformedSourceMetadata = make(map[string][]byte)
+	for k, v := range sourceMetadata {
+		transformedSourceMetadata[k] = v
+	}
 
-    // MetadataFlowState describes the state of a given flow in an environment.
-    type MetadataFlowState struct {
+	// MetadataFlowState describes the state of a given flow in an environment.
+	type MetadataFlowState struct {
 		ActiveVersion uint64
 		Name          string
 
@@ -31,8 +32,8 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 		AllVersions   map[uint64]salesforce.ForceMetadataItem
 	}
 
-    // EnvironmentFlowState semantically describes what flows and versions are present in an environment,
-    // which are active.
+	// EnvironmentFlowState semantically describes what flows and versions are present in an environment,
+	// which are active.
 	type EnvironmentFlowState struct {
 		EnvironmentName string
 		ActiveFlows     map[string]MetadataFlowState
@@ -110,8 +111,8 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 	sourceState := determineEnvironmentState(sourceMetadata, "source")
 	// spew.Dump("SOURCE:", sourceState)
 
-    // now, index the state of the flows we just determined, by using their full path names.
-    // this allows us to use them to filter the transformedSourceMetadata itself.
+	// now, index the state of the flows we just determined, by using their full path names.
+	// this allows us to use them to filter the transformedSourceMetadata itself.
 
 	activeFlowsInSourceByCompletePath := make(map[string]MetadataFlowState)
 	for _, flowState := range sourceState.ActiveFlows {
@@ -130,7 +131,7 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 		}
 	}
 
-    // now, we can finally transform the metadata only include flows that are active in the source (and only
+	// now, we can finally transform the metadata only include flows that are active in the source (and only
 	// that version) if they aren't already active in the target.
 	for fileName := range transformedSourceMetadata {
 		if _, presentAsInactive := inactiveFlowVersionsInSourceByCompletePath[fileName]; presentAsInactive {
@@ -151,5 +152,5 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 		// TODO alas, this negative filtering logic is a bit difficult to follow.
 	}
 
-    return
+	return
 }

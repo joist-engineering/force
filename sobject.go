@@ -8,8 +8,9 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	"github.com/heroku/force/util"
+
 	"github.com/heroku/force/salesforce"
+	"github.com/heroku/force/util"
 )
 
 var cmdSobject = &Command{

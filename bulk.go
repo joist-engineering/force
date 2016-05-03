@@ -56,8 +56,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+
+	"github.com/heroku/force/salesforce"
 	"github.com/heroku/force/util"
-		"github.com/heroku/force/salesforce"
 )
 
 var cmdBulk = &Command{

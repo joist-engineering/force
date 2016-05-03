@@ -13,8 +13,10 @@ import (
 	"net/url"
 	"runtime"
 	"strings"
+
 	"github.com/heroku/force/util"
 )
+
 const Version = "dev"
 
 const DefaultApiVersion = "v36.0"
