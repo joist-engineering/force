@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/heroku/force/util"
+		. "github.com/heroku/force/salesforce"
 )
 
 var cmdFetch = &Command{
@@ -207,7 +208,9 @@ func runFetch(cmd *Command, args []string) {
 	} else if strings.ToLower(metadataType) == "package" {
 		if len(metadataName) > 0 {
 			for names := range metadataName {
-				files, err = force.Metadata.RetrievePackage(metadataName[names])
+				files, err = force.Metadata.RetrievePackage(metadataName[names], ForceRetrieveOptions{
+					PreserveZip: preserveZip,
+				})
 				if err != nil {
 					util.ErrorAndExit(err.Error())
 				}
@@ -225,7 +228,9 @@ func runFetch(cmd *Command, args []string) {
 			mq := ForceMetadataQueryElement{metadataType, []string{"*"}}
 			query = append(query, mq)
 		}
-		files, err = force.Metadata.Retrieve(query)
+		files, err = force.Metadata.Retrieve(query, ForceRetrieveOptions{
+			PreserveZip: preserveZip,
+		})
 		if err != nil {
 			util.ErrorAndExit(err.Error())
 		}

@@ -1,4 +1,4 @@
-package main
+package salesforce
 
 import (
 	"encoding/xml"
@@ -22,7 +22,7 @@ type MetaType struct {
 	Name    string   `xml:"name"`
 }
 
-func createPackage() Package {
+func createPackage(apiVersion string) Package {
 	return Package{
 		Version: strings.TrimPrefix(apiVersion, "v"),
 		Xmlns:   "http://soap.sforce.com/2006/04/metadata",
@@ -83,18 +83,19 @@ type PackageBuilder struct {
 	IsPush   bool
 	Metadata map[string]MetaType
 	Files    ForceMetadataFiles
+	ApiVersion string
 }
 
-func NewPushBuilder() PackageBuilder {
-	pb := PackageBuilder{IsPush: true}
+func NewPushBuilder(apiVersion string) PackageBuilder {
+	pb := PackageBuilder{IsPush: true, ApiVersion: apiVersion}
 	pb.Metadata = make(map[string]MetaType)
 	pb.Files = make(ForceMetadataFiles)
 
 	return pb
 }
 
-func NewFetchBuilder() PackageBuilder {
-	pb := PackageBuilder{IsPush: false}
+func NewFetchBuilder(apiVersion string) PackageBuilder {
+	pb := PackageBuilder{IsPush: false, ApiVersion: apiVersion}
 	pb.Metadata = make(map[string]MetaType)
 	pb.Files = make(ForceMetadataFiles)
 
@@ -103,7 +104,7 @@ func NewFetchBuilder() PackageBuilder {
 
 // Build and return package.xml
 func (pb PackageBuilder) PackageXml() []byte {
-	p := createPackage()
+	p := createPackage(pb.ApiVersion)
 
 	for _, metaType := range pb.Metadata {
 		p.Types = append(p.Types, metaType)

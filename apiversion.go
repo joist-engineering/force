@@ -5,9 +5,6 @@ import (
 	"github.com/heroku/force/util"
 )
 
-var apiVersion = "v36.0"
-var apiVersionNumber = "36.0"
-
 var cmdApiVersion = &Command{
 	Run:   runApiVersion,
 	Usage: "apiversion",

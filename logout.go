@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
+	. "github.com/heroku/force/salesforce"
 )
 
 var cmdLogout = &Command{

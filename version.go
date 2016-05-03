@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	. "github.com/heroku/force/salesforce"
 )
 
-var Version = "dev"
+var apiVersion = "v36.0"
+var apiVersionNumber = "36.0"
 
 //Dood, what
 var cmdVersion = &Command{

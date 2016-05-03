@@ -1,4 +1,4 @@
-package main
+package salesforce
 
 import (
 	"archive/zip"
@@ -208,6 +208,10 @@ type ForceDeployOptions struct {
 	TestLevel         string   `xml:"testLevel"`
 	RunTests          []string `xml:"runTests"`
 	SinglePackage     bool     `xml:"singlePackage"`
+}
+
+type ForceRetrieveOptions struct {
+	PreserveZip bool
 }
 
 /* These structs define which options are available and which are
@@ -652,7 +656,7 @@ func (fm *ForceMetadata) ValidateFieldOptions(typ string, options map[string]str
 }
 
 func NewForceMetadata(force *Force) (fm *ForceMetadata) {
-	fm = &ForceMetadata{ApiVersion: apiVersionNumber, Force: force}
+	fm = &ForceMetadata{ApiVersion: force.Credentials.ApiVersionNumber(), Force: force}
 	return
 }
 
@@ -698,7 +702,7 @@ func (fm *ForceMetadata) CheckDeployStatus(id string) (results ForceCheckDeploym
 	return
 }
 
-func (fm *ForceMetadata) CheckRetrieveStatus(id string) (files ForceMetadataFiles, err error) {
+func (fm *ForceMetadata) CheckRetrieveStatus(id string, options ForceRetrieveOptions) (files ForceMetadataFiles, err error) {
 	body, err := fm.soapExecute("checkRetrieveStatus", fmt.Sprintf("<id>%s</id>", id))
 	if err != nil {
 		fmt.Printf("Hrm... will probably try again\n")
@@ -716,7 +720,7 @@ func (fm *ForceMetadata) CheckRetrieveStatus(id string) (files ForceMetadataFile
 	}
 
 	zipfiles, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
-	if preserveZip == true {
+	if options.PreserveZip == true {
 		ioutil.WriteFile("inbound.zip", data, 0644)
 	}
 	if err != nil {
@@ -733,7 +737,7 @@ func (fm *ForceMetadata) CheckRetrieveStatus(id string) (files ForceMetadataFile
 }
 
 func (fm *ForceMetadata) DescribeMetadata() (describe MetadataDescribeResult, err error) {
-	body, err := fm.soapExecute("describeMetadata", fmt.Sprintf("<apiVersion>%s</apiVersion>", apiVersionNumber))
+	body, err := fm.soapExecute("describeMetadata", fmt.Sprintf("<apiVersion>%s</apiVersion>", fm.ApiVersion))
 	if err != nil {
 		return
 	}
@@ -791,7 +795,7 @@ func (fm *ForceMetadata) CreateConnectedApp(name, callback string) (err error) {
 		return err
 	}
 	email := me["Email"]
-	body, err := fm.soapExecute("create", fmt.Sprintf(soap, name, apiVersionNumber, name, email, callback))
+	body, err := fm.soapExecute("create", fmt.Sprintf(soap, name, fm.ApiVersion, name, email, callback))
 	if err != nil {
 		return err
 	}
@@ -1152,7 +1156,7 @@ func (fm *ForceMetadata) DeployZipFile(soap string, zipfile []byte) (results For
 	return
 }
 
-func (fm *ForceMetadata) Retrieve(query ForceMetadataQuery) (files ForceMetadataFiles, err error) {
+func (fm *ForceMetadata) Retrieve(query ForceMetadataQuery, options ForceRetrieveOptions) (files ForceMetadataFiles, err error) {
 
 	soap := `
 		<retrieveRequest>
@@ -1177,7 +1181,7 @@ func (fm *ForceMetadata) Retrieve(query ForceMetadataQuery) (files ForceMetadata
 		}
 		types += fmt.Sprintf(soapType, element.Name, members)
 	}
-	body, err := fm.soapExecute("retrieve", fmt.Sprintf(soap, apiVersionNumber, types))
+	body, err := fm.soapExecute("retrieve", fmt.Sprintf(soap, fm.ApiVersion, types))
 	if err != nil {
 		return
 	}
@@ -1191,7 +1195,7 @@ func (fm *ForceMetadata) Retrieve(query ForceMetadataQuery) (files ForceMetadata
 	if err = fm.CheckStatus(status.Id); err != nil {
 		return
 	}
-	raw_files, err := fm.CheckRetrieveStatus(status.Id)
+	raw_files, err := fm.CheckRetrieveStatus(status.Id, options)
 	if err != nil {
 		return
 	}
@@ -1203,14 +1207,14 @@ func (fm *ForceMetadata) Retrieve(query ForceMetadataQuery) (files ForceMetadata
 	return
 }
 
-func (fm *ForceMetadata) RetrievePackage(packageName string) (files ForceMetadataFiles, err error) {
+func (fm *ForceMetadata) RetrievePackage(packageName string, options ForceRetrieveOptions) (files ForceMetadataFiles, err error) {
 	soap := `
 		<retrieveRequest>
 			<apiVersion>%s</apiVersion>
 			<packageNames>%s</packageNames>
 		</retrieveRequest>
 	`
-	soap = fmt.Sprintf(soap, apiVersionNumber, packageName)
+	soap = fmt.Sprintf(soap, fm.ApiVersion, packageName)
 	body, err := fm.soapExecute("retrieve", soap)
 	if err != nil {
 		return
@@ -1224,7 +1228,7 @@ func (fm *ForceMetadata) RetrievePackage(packageName string) (files ForceMetadat
 	if err = fm.CheckStatus(status.Id); err != nil {
 		return
 	}
-	raw_files, err := fm.CheckRetrieveStatus(status.Id)
+	raw_files, err := fm.CheckRetrieveStatus(status.Id, options)
 	if err != nil {
 		return
 	}
@@ -1252,7 +1256,7 @@ func (fm *ForceMetadata) ListAllMetadata() (describe MetadataDescribeResult, err
 
 func (fm *ForceMetadata) ListConnectedApps() (apps ForceConnectedApps, err error) {
 	originalVersion := fm.ApiVersion
-	fm.ApiVersion = apiVersionNumber
+	fm.ApiVersion = fm.ApiVersion
 	body, err := fm.ListMetadata("ConnectedApp")
 	fm.ApiVersion = originalVersion
 	if err != nil {
@@ -1268,7 +1272,7 @@ func (fm *ForceMetadata) ListConnectedApps() (apps ForceConnectedApps, err error
 	return
 }
 
-func enumerateMetadataByType(files ForceMetadataFiles, metadataName string, metadataFolderPath string, metadataFileExtension string, ignoreRegex string) ForceMetadataFilesForType {
+func EnumerateMetadataByType(files ForceMetadataFiles, metadataName string, metadataFolderPath string, metadataFileExtension string, ignoreRegex string) ForceMetadataFilesForType {
 	// ApexClassTypeEntry := MetaType{
 	// 	Name:    metadataName,
 	// 	Members: make([]string, 0),

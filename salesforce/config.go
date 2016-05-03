@@ -1,4 +1,4 @@
-package main
+package salesforce
 
 import (
 	"github.com/devangel/config"

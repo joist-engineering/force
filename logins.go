@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 	"text/tabwriter"
+		. "github.com/heroku/force/salesforce"
+
 )
 
 var cmdLogins = &Command{
@@ -73,10 +75,6 @@ func ActiveCredentials() (creds ForceCredentials, err error) {
 	}
 	data, err := Config.Load("accounts", account)
 	json.Unmarshal([]byte(data), &creds)
-	if creds.ApiVersion != "" {
-		apiVersionNumber = creds.ApiVersion
-		apiVersion = "v" + apiVersionNumber
-	}
 
 	return
 }

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/heroku/force/util"
+	. "github.com/heroku/force/salesforce"
 )
 
 // Brief comment to fire commit

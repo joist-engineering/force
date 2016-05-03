@@ -6,6 +6,7 @@ import (
 	// "github.com/davecgh/go-spew/spew"
 	"encoding/xml"
 	"github.com/heroku/force/util"
+	. "github.com/heroku/force/salesforce"
 )
 
 var cmdWipe = &Command{
@@ -48,7 +49,7 @@ func runWipe(cmd *Command, args []string) {
 		{Name: "FlowDefinition", Members: []string{"*"}},
 		{Name: "Flow", Members: []string{"*"}},
 	}
-	salesforceSideFiles, err := force.Metadata.Retrieve(query)
+	salesforceSideFiles, err := force.Metadata.Retrieve(query, ForceRetrieveOptions{})
 	if err != nil {
 		fmt.Printf("Encountered an error with retrieve...\n")
 		util.ErrorAndExit(err.Error())
@@ -71,12 +72,12 @@ func runWipe(cmd *Command, args []string) {
 
 	// DEACTIVATE ALL FLOWS
 	// DELETE ALL VISUALFORCE PAGES (and put up empty ones to work around limitation of at least 1 layout must be present)
-    filesForType := enumerateMetadataByType(salesforceSideFiles, "ApexTrigger", "triggers", "trigger", "^DS")
+    filesForType := EnumerateMetadataByType(salesforceSideFiles, "ApexTrigger", "triggers", "trigger", "^DS")
 
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
-    filesForType = enumerateMetadataByType(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS|^test_DS")
+    filesForType = EnumerateMetadataByType(salesforceSideFiles, "ApexClass", "classes", "cls", "^DS|^test_DS")
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
-    filesForType = enumerateMetadataByType(salesforceSideFiles, "Flow", "flows", "flow", "bogusbogusbogusbogusbogusbogus")
+    filesForType = EnumerateMetadataByType(salesforceSideFiles, "Flow", "flows", "flow", "bogusbogusbogusbogusbogusbogus")
 	DestructiveChanges.Types = append(DestructiveChanges.Types, filesForType.MetaType())
 	// DestructiveChanges.Types = append(DestructiveChanges.Types, metadataEnumerator(salesforceSideFiles, "FlowDefinition", "flowDefinitions", "flowDefinition"))
 
@@ -102,7 +103,7 @@ func runWipe(cmd *Command, args []string) {
 	DeploymentOptions.RollbackOnError = true
 	DeploymentOptions.TestLevel = "RunLocalTests"
 
-	packageBuilder := NewPushBuilder()
+	packageBuilder := NewPushBuilder(apiVersion)
 	packageBuilder.AddDestructiveChangesData(byteXML)
 
 	fmt.Printf("Now deploying destructiveChanges.xml...")

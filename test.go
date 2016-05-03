@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/heroku/force/util"
+	. "github.com/heroku/force/salesforce"
 	"strconv"
 )
 

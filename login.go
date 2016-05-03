@@ -6,6 +6,7 @@ import (
 	"github.com/bgentry/speakeasy"
 	"net/url"
 	"github.com/heroku/force/util"
+		. "github.com/heroku/force/salesforce"
 )
 
 var cmdLogin = &Command{
@@ -118,6 +119,21 @@ func CurrentEndpoint() (endpoint ForceEndpoint, customUrl string, err error) {
 }
 
 func ForceSaveLogin(creds ForceCredentials) (username string, err error) {
+	// TODO find existing creds to rescue existing apiVersion:
+	creds.ApiVersion = DefaultApiVersion
+
+	if existingCredsJSON, err := Config.Load("accounts", account); err == nil {
+		// there's an existing account!  Copy over its api version (and any other
+		// settings we want to persist across re-logins:)
+		var existingCreds ForceCredentials
+		if err = json.Unmarshal([]byte(existingCredsJSON), &existingCreds); err == nil {
+			if existingCreds.ApiVersion != "" {
+				fmt.Printf("We already have settings for a previous login of this account, carrying them over\n")
+				creds.ApiVersion = existingCreds.ApiVersion
+			}
+		}
+	}
+
 	force := NewForce(creds)
 	login, err := force.Get(creds.Id)
 	if err != nil {
@@ -161,10 +177,12 @@ func ForceSaveLogin(creds ForceCredentials) (username string, err error) {
 }
 
 func ForceLoginAndSaveSoap(endpoint ForceEndpoint, user_name string, password string) (username string, err error) {
-	creds, err := ForceSoapLogin(endpoint, user_name, password)
+	creds, err := ForceSoapLogin(endpoint, apiVersion, user_name, password)
 	if err != nil {
 		return
 	}
+
+	creds.ApiVersion = DefaultApiVersion
 
 	username, err = ForceSaveLogin(creds)
 	//fmt.Printf("Creds %+v", creds)
@@ -176,6 +194,9 @@ func ForceLoginAndSave(endpoint ForceEndpoint) (username string, err error) {
 	if err != nil {
 		return
 	}
+
+	creds.ApiVersion = DefaultApiVersion
+
 	username, err = ForceSaveLogin(creds)
 	return
 }

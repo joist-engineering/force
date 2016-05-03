@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 	"github.com/heroku/force/util"
+		. "github.com/heroku/force/salesforce"
 	"time"
 )
 
@@ -469,7 +470,7 @@ func pushByPath(fpath []string) {
 // Creates a package that includes everything in the passed in string slice
 // and then deploys the package to salesforce
 func pushByPaths(fpaths []string) {
-	pb := NewPushBuilder()
+	pb := NewPushBuilder(apiVersion)
 
 	var badPaths []string
 	for _, fpath := range fpaths {

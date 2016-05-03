@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"github.com/heroku/force/util"
+	. "github.com/heroku/force/salesforce"
 )
 
 ////////////////////////////////////////////////////////////////////////
@@ -262,7 +263,7 @@ func runSecurity(cmd *Command, args []string) {
 	force, _ := ActiveForce()
 
 	// Step 1: retrieve the desired metadata
-	files, err := force.Metadata.Retrieve(query)
+	files, err := force.Metadata.Retrieve(query, ForceRetrieveOptions{})
 	if err != nil {
 		util.ErrorAndExit(err.Error())
 	}
@@ -361,5 +362,5 @@ func runSecurity(cmd *Command, args []string) {
 		util.ErrorAndExit(err.Error())
 	}
 
-	Open(filepath.Join(root, "security.html"))
+	util.Open(filepath.Join(root, "security.html"))
 }

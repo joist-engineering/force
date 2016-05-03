@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"github.com/heroku/force/util"
+	. "github.com/heroku/force/salesforce"
 )
 
 var cmdSobject = &Command{
@@ -155,7 +156,7 @@ func runSobjectImport(args []string) {
 	}
 
 	force, _ := ActiveForce()
-	response, err := force.Partner.soapExecuteCore("create", soapMsg)
+	response, err := force.Partner.SoapExecuteCore("create", soapMsg)
 
 	type errorData struct {
 		Fields     string `xml:"field"`

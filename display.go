@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 	"github.com/heroku/force/util"
+		. "github.com/heroku/force/salesforce"
 )
 
 var BatchInfoTemplate = `
@@ -464,8 +465,6 @@ func StringSliceToInterfaceSlice(s []string) (i []interface{}) {
 	}
 	return
 }
-
-type ForceSobjectFields []interface{}
 
 func DisplayForceSobject(sobject ForceSobject) {
 	fields := ForceSobjectFields(sobject["fields"].([]interface{}))

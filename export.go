@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/heroku/force/util"
+	. "github.com/heroku/force/salesforce"
 )
 
 var cmdExport = &Command{
@@ -134,7 +135,9 @@ func runExport(cmd *Command, args []string) {
 		{Name: "ValidationRule", Members: []string{"*"}},
 		{Name: "Workflow", Members: []string{"*"}},
 	}
-	files, err := force.Metadata.Retrieve(query)
+	files, err := force.Metadata.Retrieve(query, ForceRetrieveOptions{
+		PreserveZip: preserveZip,
+	})
 	if err != nil {
 		fmt.Printf("Encountered and error with retrieve...\n")
 		util.ErrorAndExit(err.Error())

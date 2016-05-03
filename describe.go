@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"github.com/heroku/force/util"
 	//"fmt"
+	. "github.com/heroku/force/salesforce"
 )
 
 var cmdDescribe = &Command{

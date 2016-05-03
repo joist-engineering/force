@@ -7,6 +7,7 @@ import (
 	"strings"
 	"github.com/heroku/force/project"
 	"github.com/heroku/force/util"
+	. "github.com/heroku/force/salesforce"
 )
 
 var cmdImport = &Command{
@@ -110,7 +111,7 @@ func runImport(cmd *Command, args []string) {
 		{Name: "Flow", Members: []string{"*"}},
 	}
 
-	targetFlowsAndDefinitions, err := force.Metadata.Retrieve(query)
+	targetFlowsAndDefinitions, err := force.Metadata.Retrieve(query, ForceRetrieveOptions{})
 	if err != nil {
 		fmt.Printf("Encountered an error with retrieve...\n")
 		util.ErrorAndExit(err.Error())
@@ -131,7 +132,7 @@ func runImport(cmd *Command, args []string) {
 	}
 
 	determineEnvironmentState := func(poop ForceMetadataFiles, environmentName string) EnvironmentFlowState {
-		flowDefinitions := enumerateMetadataByType(poop, "FlowDefinition", "flowDefinitions", "flowDefinition", "bogusbogusbogusbogus")
+		flowDefinitions := EnumerateMetadataByType(poop, "FlowDefinition", "flowDefinitions", "flowDefinition", "bogusbogusbogusbogus")
 
 		state := EnvironmentFlowState{
 			EnvironmentName: environmentName,
@@ -162,7 +163,7 @@ func runImport(cmd *Command, args []string) {
 		}
 
 		// now, enumerate the flows themselves and index them in:
-		flowVersions := enumerateMetadataByType(targetFlowsAndDefinitions, "Flow", "flows", "flow", "bogusbogusbogusbogusbogus")
+		flowVersions := EnumerateMetadataByType(targetFlowsAndDefinitions, "Flow", "flows", "flow", "bogusbogusbogusbogusbogus")
 		for _, version := range flowVersions.Members {
 
 			// the version number is indicated by a normalized naming convention in the entries rendered by the

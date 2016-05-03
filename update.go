@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ddollar/dist"
 	"github.com/heroku/force/util"
+	. "github.com/heroku/force/salesforce"
 )
 
 var cmdUpdate = &Command{
