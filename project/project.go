@@ -65,8 +65,10 @@ func (project *project) LoadedFromPath() string {
 	return project.path
 }
 
-// ContentsWithAllTransformsApplied will give you all of the project contents
-func (project *project) ContentsWithAllTransformsApplied(environmentConfig *EnvironmentConfigJSON) *map[string][]byte {
+// ContentsWithInternalTransformsApplied will give you all of the project contents with any project-specific transforms applied.
+// Note that "External" transforms, which for instance depend on the state of the current environment,
+// are applied elsewhere.
+func (project *project) ContentsWithInternalTransformsApplied(environmentConfig *EnvironmentConfigJSON) map[string][]byte {
 	transformedContents := project.EnumerateContents()
 
 	// first transform: string interpolation of the vars in the config:
@@ -80,7 +82,7 @@ func (project *project) ContentsWithAllTransformsApplied(environmentConfig *Envi
 		transformedContents[name] = []byte(contentsUnderProcessing)
 	}
 
-	return &transformedContents
+	return transformedContents
 }
 
 // EnumerateContents enumerates all of the Salesforce metadata files in the project directory
@@ -89,7 +91,7 @@ func (project *project) ContentsWithAllTransformsApplied(environmentConfig *Envi
 // uses ContentsWithAllTransformsApplied() for this task.
 //
 // Note that it only enumerates the filesystem once, and memoizes the result.
-func (project *project) EnumerateContents() map[string][]byte {
+func (project *project) EnumerateContents() (enumeratedContents map[string][]byte) {
     root := project.path
 
 	// compute and memoize as needed:
@@ -117,5 +119,9 @@ func (project *project) EnumerateContents() map[string][]byte {
 
     // we return a copy of the memoized data so consumers can't mutate state in the Project
     // unexpectedly.
-    return *project.lazyProjectContents
+	enumeratedContents = make(map[string][]byte)
+    for key, value := range *project.lazyProjectContents {
+		enumeratedContents[key] = value
+	}
+	return
 }
