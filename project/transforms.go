@@ -8,6 +8,8 @@ import (
 
 	"github.com/heroku/force/salesforce"
 	"github.com/heroku/force/util"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 // TransformDeployToIncludeNewFlowVersionsOnly allows you to deploy only those flows that have changed,
@@ -24,7 +26,7 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 	}
 
 	// MetadataFlowState describes the state of a given flow in an environment.
-	type MetadataFlowState struct {
+	type MetadataFlowDefinitionState struct {
 		ActiveVersion uint64
 		Name          string
 
@@ -36,17 +38,17 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 	// which are active.
 	type EnvironmentFlowState struct {
 		EnvironmentName string
-		ActiveFlows     map[string]MetadataFlowState
-		InactiveFlows   map[string]MetadataFlowState
+		ActiveFlows     map[string]MetadataFlowDefinitionState
+		InactiveFlows   map[string]MetadataFlowDefinitionState
 	}
 
 	determineEnvironmentState := func(metadataFiles salesforce.ForceMetadataFiles, environmentName string) EnvironmentFlowState {
-		flowDefinitions := salesforce.EnumerateMetadataByType(metadataFiles, "FlowDefinition", "flowDefinitions", "flowDefinition", "")
+		flowDefinitions := salesforce.EnumerateMetadataByType(metadataFiles, "FlowDefinition", "flowDefinitions", "flowDefinition", "bogusbogusbogusbogusbogusbogus")
 
 		state := EnvironmentFlowState{
 			EnvironmentName: environmentName,
-			ActiveFlows:     make(map[string]MetadataFlowState),
-			InactiveFlows:   make(map[string]MetadataFlowState),
+			ActiveFlows:     make(map[string]MetadataFlowDefinitionState),
+			InactiveFlows:   make(map[string]MetadataFlowDefinitionState),
 		}
 		// First, determine what flows are active.
 		for _, item := range flowDefinitions.Members {
@@ -57,13 +59,13 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 			}
 
 			if res.ActiveVersionNumber != 0 {
-				state.ActiveFlows[item.Name] = MetadataFlowState{
+				state.ActiveFlows[item.Name] = MetadataFlowDefinitionState{
 					ActiveVersion: res.ActiveVersionNumber,
 					Name:          item.Name,
 					AllVersions:   make(map[uint64]salesforce.ForceMetadataItem),
 				}
 			} else {
-				state.InactiveFlows[item.Name] = MetadataFlowState{
+				state.InactiveFlows[item.Name] = MetadataFlowDefinitionState{
 					ActiveVersion: res.ActiveVersionNumber,
 					Name:          item.Name,
 					AllVersions:   make(map[uint64]salesforce.ForceMetadataItem),
@@ -72,7 +74,7 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 		}
 
 		// now, enumerate the flows themselves and index them in:
-		flowVersions := salesforce.EnumerateMetadataByType(metadataFiles, "Flow", "flows", "flow", "")
+		flowVersions := salesforce.EnumerateMetadataByType(metadataFiles, "Flow", "flows", "flow", "bogusbogusbogusbogusbogusbogus")
 		for _, version := range flowVersions.Members {
 
 			// the version number is indicated by a normalized naming convention in the entries rendered by the
@@ -106,7 +108,7 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 	}
 
 	targetState := determineEnvironmentState(targetCurrentMetadata, "target")
-	// spew.Dump("TARGET:", targetState)
+	//spew.Dump("TARGET:", targetState)
 
 	sourceState := determineEnvironmentState(sourceMetadata, "source")
 	// spew.Dump("SOURCE:", sourceState)
@@ -114,41 +116,26 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 	// now, index the state of the flows we just determined, by using their full path names.
 	// this allows us to use them to filter the transformedSourceMetadata itself.
 
-	activeFlowsInSourceByCompletePath := make(map[string]MetadataFlowState)
+	activeFlowsInSourceByCompletePath := make(map[string]MetadataFlowDefinitionState)
 	for _, flowState := range sourceState.ActiveFlows {
 		activeFlowsInSourceByCompletePath[flowState.ActiveContent.CompletePath] = flowState
 	}
 
-	activeFlowsInTargetByCompletePath := make(map[string]MetadataFlowState)
+	activeFlowsInTargetByCompletePath := make(map[string]MetadataFlowDefinitionState)
 	for _, flowState := range targetState.ActiveFlows {
 		activeFlowsInTargetByCompletePath[flowState.ActiveContent.CompletePath] = flowState
-	}
-
-	inactiveFlowVersionsInSourceByCompletePath := make(map[string]salesforce.ForceMetadataItem)
-	for _, flowState := range sourceState.InactiveFlows {
-		for _, flowStateVersion := range flowState.AllVersions {
-			inactiveFlowVersionsInSourceByCompletePath[flowStateVersion.CompletePath] = flowStateVersion
-		}
 	}
 
 	// now, we can finally transform the metadata only include flows that are active in the source (and only
 	// that version) if they aren't already active in the target.
 	for fileName := range transformedSourceMetadata {
-		if _, presentAsInactive := inactiveFlowVersionsInSourceByCompletePath[fileName]; presentAsInactive {
-			// this file is not an active flow in the source.  no point at all in deploying it.
-			// so, remove it entirely from the package.
+		fmt.Printf("CHECKING %s\n", fileName)
+		if _, alreadyDeployed := activeFlowsInTargetByCompletePath[fileName]; alreadyDeployed {
+			// already deployed, don't need it.
+			fmt.Printf("Not going to deploy '%s' because it's already deployed and active on our target!\n", fileName)
 			delete(transformedSourceMetadata, fileName)
-			fmt.Printf("Not bothering to deploy '%s' because it's not an active flow in our source directory.\n", fileName)
-		} else {
-			// it either an active flow or some other piece of metadata. awesome, we probably want to deploy it.  However, if it's already deployed
-			// on the target and active, then all that no-op would do is just cause sadness (SF does not allow
-			// for replacing flows)
-			if _, alreadyDeployed := activeFlowsInTargetByCompletePath[fileName]; alreadyDeployed {
-				// already deployed, don't need it.
-				fmt.Printf("Not going to deploy '%s' because it's already deployed and active on our target!\n", fileName)
-				delete(transformedSourceMetadata, fileName)
-			}
 		}
+
 		// TODO alas, this negative filtering logic is a bit difficult to follow.
 	}
 
