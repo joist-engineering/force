@@ -8,8 +8,6 @@ import (
 
 	"github.com/heroku/force/salesforce"
 	"github.com/heroku/force/util"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 // TransformDeployToIncludeNewFlowVersionsOnly allows you to deploy only those flows that have changed,
