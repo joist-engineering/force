@@ -1308,7 +1308,7 @@ func EnumerateMetadataByType(files ForceMetadataFiles, metadataName string, meta
 			// grab the filename (minus path and extension), and that's the metadata object name itself:
 			metadataName := matchedPathFields[1]
 
-			if ignoreRegex != "" && !ignoreMatcher.MatchString(metadataName) {
+			if ignoreRegex == "" || !ignoreMatcher.MatchString(metadataName) {
 				TypeFiles.Members = append(TypeFiles.Members, ForceMetadataItem{
 					Name:         metadataName,
 					Content:      fdata,

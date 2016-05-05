@@ -41,7 +41,7 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 	}
 
 	determineEnvironmentState := func(metadataFiles salesforce.ForceMetadataFiles, environmentName string) EnvironmentFlowState {
-		flowDefinitions := salesforce.EnumerateMetadataByType(metadataFiles, "FlowDefinition", "flowDefinitions", "flowDefinition", "bogusbogusbogusbogusbogusbogus")
+		flowDefinitions := salesforce.EnumerateMetadataByType(metadataFiles, "FlowDefinition", "flowDefinitions", "flowDefinition", "")
 
 		state := EnvironmentFlowState{
 			EnvironmentName: environmentName,
@@ -72,7 +72,7 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 		}
 
 		// now, enumerate the flows themselves and index them in:
-		flowVersions := salesforce.EnumerateMetadataByType(metadataFiles, "Flow", "flows", "flow", "bogusbogusbogusbogusbogusbogus")
+		flowVersions := salesforce.EnumerateMetadataByType(metadataFiles, "Flow", "flows", "flow", "")
 		for _, version := range flowVersions.Members {
 
 			// the version number is indicated by a normalized naming convention in the entries rendered by the
