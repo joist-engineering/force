@@ -157,7 +157,7 @@ Example `environments.json`:
 
 ##### Variable interpolation
 
-If required, you can use the string interpolation feature of `force` to dynamically modify your metadata when running `force import` according to a set of variables you can specify.  This can be handy for working around restrictions of Salesforce metadata that by design must refer to a given instance-specific piece of data (say, a user ID), or perhaps a remote endpoint.  Which interpolation to apply is discriminated by the hostname of the instance.
+If required, you can use the string interpolation feature of `force` to dynamically modify your metadata when running `force import` according to a set of variables you can specify, under the `vars` key.  This can be handy for working around restrictions of Salesforce metadata that by design must refer to a given instance-specific piece of data (say, a user ID), or perhaps a remote endpoint.  Which interpolation to apply is discriminated by the hostname of the instance.  To achieve dynamically computed values, you may instead specify an object for the variable rather than a raw string, containing a `exec` key with an object containing a command (as a list of the command itself and its parameters) to be executed from which the stdout output will be used as the replacement text.
 
 Example `environments.json` where a Salesforce project is integrating with a hypothetical app running on Heroku:
 
@@ -171,7 +171,10 @@ Example `environments.json` where a Salesforce project is integrating with a hyp
             "vars": {
                 "INTEGRATION_HOST": "https://dave-super-staging.herokuapp.com",
                 "INTEGRATION_TOKEN": "derp",
-                "INTEGRATION_USER": "api@example.com.dev"
+                "INTEGRATION_USER": "api@example.com.dev",
+                "GIT_VERSION": {
+                    "exec": ["git", "rev-parse", "HEAD"]
+                }
             }
         },
         "production": {
@@ -181,7 +184,10 @@ Example `environments.json` where a Salesforce project is integrating with a hyp
             "vars": {
                 "INTEGRATION_HOST": "https://dave-super.herokuapp.com",
                 "INTEGRATION_TOKEN": "sekrit",
-                "INTEGRATION_USER": "api@example.com"
+                "INTEGRATION_USER": "api@example.com",
+                "GIT_VERSION": {
+                    "exec": ["git", "rev-parse", "HEAD"]
+                }
             }
         }
     }

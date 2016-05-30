@@ -1,14 +1,17 @@
 package project
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
 
-	util "github.com/heroku/force/util"
+	"github.com/heroku/force/util"
 )
 
 type project struct {
@@ -72,12 +75,54 @@ func (project *project) LoadedFromPath() string {
 func (project *project) ContentsWithInternalTransformsApplied(environmentConfig *EnvironmentConfigJSON) map[string][]byte {
 	transformedContents := project.EnumerateContents()
 
+	// in order to prevent unnecessary re-execution of any external `exec` command vars, we'll
+	// memorize them in this map: (var name -> replacementValue computed with the `exec` callout)
+	commandReplacementValues := make(map[string]string)
+
 	// first transform: string interpolation of the vars in the config:
 	for name, contents := range transformedContents {
 		contentsUnderProcessing := string(contents)
-		for placeholder, value := range environmentConfig.Variables {
+		for placeholder, jsonValue := range environmentConfig.Variables {
 			token := fmt.Sprintf("$%s", placeholder)
-			contentsUnderProcessing = strings.Replace(contentsUnderProcessing, token, value, -1)
+
+			var replacementValue string
+
+			// now, we need to handle the json.RawMessage:
+			replacementCommand := ReplacementValueAsCommand{}
+			err := json.Unmarshal(jsonValue, &replacementCommand)
+			if err != nil {
+				// wasn't valid as a ReplacementValueAsCommand, so either there's a JSON syntax
+				// error (or is syntax guaranteed clean by this point?) or the user did not specify
+				// the exec object and just wants a regular string replacement.
+				err := json.Unmarshal(jsonValue, &replacementValue)
+				if err != nil {
+					util.ErrorAndExit("Unable to grok replacement argument specified to `args` in your environment.", err.Error())
+				}
+			} else {
+				if len(replacementCommand.CommandToExecute) > 1 {
+					// user specified a replacment command.  time to execute it!
+
+					if alreadyComputedReplacementValue, ok := commandReplacementValues[placeholder]; ok {
+						replacementValue = alreadyComputedReplacementValue
+					} else {
+						command := exec.Command(replacementCommand.CommandToExecute[0], replacementCommand.CommandToExecute[1:]...)
+						var out bytes.Buffer
+						command.Stdout = &out
+						err := command.Run()
+						if err != nil {
+							commandStyledAsShell := strings.Join(replacementCommand.CommandToExecute, " ")
+							util.ErrorAndExit("Unable to run the command `%s`, because: %s", commandStyledAsShell, err.Error())
+						}
+						replacementValue = strings.TrimSpace(out.String())
+						commandReplacementValues[placeholder] = replacementValue
+						fmt.Printf("Dynamic arg: %s -> `%s`\n", token, replacementValue)
+					}
+				} else {
+					util.ErrorAndExit("Invalid configuration: if you want to specify a command to execute with `exec`, you must actually specify a command!")
+				}
+			}
+
+			contentsUnderProcessing = strings.Replace(contentsUnderProcessing, token, replacementValue, -1)
 		}
 		// it's safe to replace the value in the map!
 		transformedContents[name] = []byte(contentsUnderProcessing)

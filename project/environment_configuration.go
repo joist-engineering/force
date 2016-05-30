@@ -18,6 +18,16 @@ type EnvironmentMatch struct {
 	InstanceRegex *string `json:"instance"`
 }
 
+// ReplacementValueAsCommand can optionally be used instead of a string as a `var` in the environment
+// config JSON to have heroku/force execute a command, grab its stdout, and use that as the
+// replacement value.
+type ReplacementValueAsCommand struct {
+	// CommandToExecute is a command (and paramters) to be executed.  It is a list of the command
+	// and the paramters to pass to it, and it will be executed with the PWD in the root of your
+	// source directory.
+	CommandToExecute []string `json:"exec"`
+}
+
 // EnvironmentConfigJSON is the struct within your environment.json that
 // describes a single environment (staging, prod, sandbox, etc.)
 type EnvironmentConfigJSON struct {
@@ -27,8 +37,11 @@ type EnvironmentConfigJSON struct {
 	MatchCriteria *EnvironmentMatch `json:"match"`
 
 	// Variables is a map of placeholders and values that will be interpolated into the metadata,
-	// wherever the token is found with a $ prefixed.
-	Variables map[string]string `json:"vars"`
+	// wherever the token is found with a $ prefixed.  The values are optionally either strings or
+	// objects containing `exec` commands, hence the type is RawMessage here so it we can choose the
+	// appropriate way to unmarshal it dynamically.  It is either supposed to be a
+	// ReplacementValueAsCommand or a string.
+	Variables map[string]json.RawMessage `json:"vars"`
 
 	// Human-readable name for this instance.  This does not come from the contents of the JSON
 	// object, but rather the name of the key in the top-level EnvironmentsConfigJSON object that
