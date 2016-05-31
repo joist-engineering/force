@@ -38,7 +38,7 @@ type EnvironmentConfigJSON struct {
 
 	// Variables is a map of placeholders and values that will be interpolated into the metadata,
 	// wherever the token is found with a $ prefixed.  The values are optionally either strings or
-	// objects containing `exec` commands, hence the type is RawMessage here so it we can choose the
+	// objects containing `exec` commands, hence the type is RawMessage here so we can choose the
 	// appropriate way to unmarshal it dynamically.  It is either supposed to be a
 	// ReplacementValueAsCommand or a string.
 	Variables map[string]json.RawMessage `json:"vars"`
