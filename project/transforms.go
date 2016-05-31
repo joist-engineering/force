@@ -47,8 +47,8 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 		AllVersions   map[uint64]salesforce.ForceMetadataItem
 	}
 
-	// EnvironmentFlowState semantically describes what flows and versions are present in an environment,
-	// which are active.
+	// EnvironmentFlowState semantically describes what flows and versions are present in an
+	// environment, which are active.
 	type EnvironmentFlowState struct {
 		EnvironmentName string
 		ActiveFlows     map[string]MetadataFlowDefinitionState
@@ -109,8 +109,9 @@ func TransformDeployToIncludeNewFlowVersionsOnly(sourceMetadata map[string][]byt
 				if state.ActiveFlows[name].ActiveVersion == versionNumber {
 					flowDefinition.ActiveContent = version
 				}
-				// alas because golang is silly and prevents us from mutating stuff in maps
-				// while being an imperative language, we have to copy the value, mutate it, and re-insert it.
+				// alas because golang is silly and prevents us from mutating stuff in maps while
+				// being an imperative language, we have to copy the value, mutate it, and re-insert
+				// it.
 				state.ActiveFlows[name] = flowDefinition
 			} else {
 				fmt.Printf("Warning: found a flow version instance on %s for which we have no flow definition at all, consider cleaning it up (we can't determine if it can be deployed or not): %s\n", environmentName, name)
