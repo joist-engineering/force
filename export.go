@@ -33,6 +33,12 @@ func runExport(cmd *Command, args []string) {
 	var root string
 	if len(args) == 1 {
 		root, err = filepath.Abs(args[0])
+	} else {
+		root, err = project.GetSourceDir()
+		if err != nil {
+			fmt.Printf("Error obtaining root directory\n")
+			util.ErrorAndExit(err.Error())
+		}
 	}
 	if err != nil {
 		fmt.Printf("Error obtaining file path\n")
@@ -149,11 +155,7 @@ func runExport(cmd *Command, args []string) {
 		fmt.Printf("Encountered and error with retrieve...\n")
 		util.ErrorAndExit(err.Error())
 	}
-	root, err = project.GetSourceDir()
-	if err != nil {
-		fmt.Printf("Error obtaining root directory\n")
-		util.ErrorAndExit(err.Error())
-	}
+
 	for name, data := range files {
 		file := filepath.Join(root, name)
 		dir := filepath.Dir(file)
