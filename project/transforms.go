@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/heroku/force/salesforce"
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/salesforce"
+	"github.com/joist-engineering/force/util"
 )
 
 // IsNewFlowVersionsOnlyTransformRequired lets consumer code (`import` command)

@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/ViViDboarder/gotifier"
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/util"
 )
 
 var cmdNotifySet = &Command{

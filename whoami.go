@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/util"
 )
 
 var cmdWhoami = &Command{

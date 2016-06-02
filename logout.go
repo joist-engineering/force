@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/util"
 )
 
 var cmdLogout = &Command{

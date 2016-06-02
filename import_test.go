@@ -1,7 +1,7 @@
 package main_test
 
 import (
-	//. "github.com/heroku/force"
+	//. "github.com/joist-engineering/force"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

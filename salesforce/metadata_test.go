@@ -1,7 +1,7 @@
 package salesforce_test
 
 import (
-	"github.com/heroku/force/salesforce"
+	"github.com/joist-engineering/force/salesforce"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/heroku/force/project"
+	"github.com/joist-engineering/force/project"
 )
 
 var _ = Describe("Project transforms", func() {

@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/util"
 )
 
 var cmdDataPipe = &Command{

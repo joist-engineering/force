@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/util"
 
 	"bitbucket.org/pkg/inflect"
 )

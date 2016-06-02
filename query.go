@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/util"
 )
 
 var cmdQuery = &Command{

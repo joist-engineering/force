@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/heroku/force/project"
-	"github.com/heroku/force/salesforce"
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/project"
+	"github.com/joist-engineering/force/salesforce"
+	"github.com/joist-engineering/force/util"
 )
 
 var cmdImport = &Command{
