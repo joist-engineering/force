@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/util"
 )
 
 // GetSourceDir walks up the given path (typically the pwd of the running `force` process) to

@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/heroku/force/salesforce"
+	"github.com/joist-engineering/force/salesforce"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/xml"
 
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/util"
 	//"fmt"
-	"github.com/heroku/force/salesforce"
+	"github.com/joist-engineering/force/salesforce"
 )
 
 var cmdDescribe = &Command{

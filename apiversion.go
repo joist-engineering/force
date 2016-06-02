@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/util"
 )
 
 var cmdApiVersion = &Command{

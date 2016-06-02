@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/heroku/force/salesforce"
+	"github.com/joist-engineering/force/salesforce"
 )
 
 //Dood, what

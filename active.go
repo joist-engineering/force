@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"sort"
 
-	"github.com/heroku/force/salesforce"
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/salesforce"
+	"github.com/joist-engineering/force/util"
 )
 
 var cmdActive = &Command{

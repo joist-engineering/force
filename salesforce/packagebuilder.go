@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/util"
 )
 
 // Structs for XML building

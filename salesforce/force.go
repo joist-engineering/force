@@ -14,7 +14,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/heroku/force/util"
+	"github.com/joist-engineering/force/util"
 )
 
 const Version = "dev"
