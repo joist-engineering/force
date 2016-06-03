@@ -1,0 +1,13 @@
+package: github.com/joist-engineering/force
+import:
+- package: bitbucket.org/pkg/inflect
+- package: github.com/ViViDboarder/gotifier
+- package: github.com/bgentry/speakeasy
+- package: github.com/ddollar/dist
+- package: github.com/devangel/config
+- package: github.com/bmizerany/assert
+- package: github.com/kr/pretty
+- package: github.com/kr/text
+- package: github.com/onsi/ginkgo
+- package: github.com/onsi/gomega
+- package: gopkg.in/yaml.v2
