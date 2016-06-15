@@ -6,6 +6,7 @@ node('docker') {
   stage 'Run tests'
   sh "docker run -v \$(pwd):/go/src/github.com/joist-engineering/force joist-engineering/force:latest glide install"
   sh "docker run -v \$(pwd):/go/src/github.com/joist-engineering/force joist-engineering/force:latest go test"
+  sh "echo poo poo butt"
 
   stage 'Build binaries for Linux and OS X on x86_64'
   sh "docker run -v \$(pwd):/go/src/github.com/joist-engineering/force joist-engineering/force:latest gox -os \"darwin linux\" -arch=amd64"
