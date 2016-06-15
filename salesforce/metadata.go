@@ -667,6 +667,7 @@ func NewForceMetadata(force *Force) (fm *ForceMetadata) {
 	if force.Credentials.ApiVersion == "" {
 		util.ErrorAndExit("API version not recorded for this account, please run `force login`")
 	}
+	fmt.Printf("kk, what: %s\n", force.Credentials.ApiVersion)
 	fm = &ForceMetadata{ApiVersion: force.Credentials.ApiVersionNumber(), Force: force}
 	return
 }

@@ -234,18 +234,17 @@ func NewForce(creds ForceCredentials) (force *Force) {
 
 func ForceSoapLogin(endpoint ForceEndpoint, apiVersion string, username string, password string) (creds ForceCredentials, err error) {
 	var surl string
-	version := strings.Split(apiVersion, "v")[1]
 	switch endpoint {
 	case EndpointProduction:
-		surl = fmt.Sprintf("https://login.salesforce.com/services/Soap/u/%s", version)
+		surl = fmt.Sprintf("https://login.salesforce.com/services/Soap/u/%s", apiVersion)
 	case EndpointTest:
-		surl = fmt.Sprintf("https://test.salesforce.com/services/Soap/u/%s", version)
+		surl = fmt.Sprintf("https://test.salesforce.com/services/Soap/u/%s", apiVersion)
 	case EndpointPrerelease:
-		surl = fmt.Sprintf("https://prerelna1.pre.salesforce.com/services/Soap/u/%s", version)
+		surl = fmt.Sprintf("https://prerelna1.pre.salesforce.com/services/Soap/u/%s", apiVersion)
 	case EndpointMobile1:
-		surl = fmt.Sprintf("https://mobile1.t.salesforce.com/services/Soap/u/%s", version)
+		surl = fmt.Sprintf("https://mobile1.t.salesforce.com/services/Soap/u/%s", apiVersion)
 	case EndpointCustom:
-		surl = fmt.Sprintf("%s/services/Soap/u/%s", CustomEndpoint, version)
+		surl = fmt.Sprintf("%s/services/Soap/u/%s", CustomEndpoint, apiVersion)
 	default:
 		util.ErrorAndExit("Unable to login with SOAP. Unknown endpoint type")
 	}
@@ -271,11 +270,11 @@ func ForceSoapLogin(endpoint ForceEndpoint, apiVersion string, username string, 
 	}
 	instanceUrl := u.Scheme + "://" + u.Host
 	identity := u.Scheme + "://" + u.Host + "/id/" + orgid + "/" + result.Id
-	creds = ForceCredentials{result.SessionId, identity, result.Id, instanceUrl, "", "", endpoint == EndpointCustom, "", version, endpoint}
+	creds = ForceCredentials{result.SessionId, identity, result.Id, instanceUrl, "", "", endpoint == EndpointCustom, "", apiVersion, endpoint}
 
 	f := NewForce(creds)
 	url := "https://force-cli"
-	if version == "dev" {
+	if Version == "bloopboopnope" {
 		url = fmt.Sprintf("%sstaging.herokuapp.com/auth/soaplogin/?id=%s&access_token=%s&instance_url=%s", url, creds.Id, creds.AccessToken, creds.InstanceUrl)
 	} else {
 		url = fmt.Sprintf("https://force-cli.herokuapp.com/auth/soaplogin/?id=%s&access_token=%s&instance_url=%s", creds.Id, creds.AccessToken, creds.InstanceUrl)
