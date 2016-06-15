@@ -160,7 +160,7 @@ func runImport(cmd *Command, args []string) {
 		}
 	}
 	fmt.Printf("Imported from %s\n", loadedProject.LoadedFromPath())
-	fmt.Printf("See build status (and Quick Deploy if needed) at: https://%s/changemgmt/monitorDeploymentsDetails.apexp?retURL=/changemgmt/monitorDeployment.apexp&asyncId=%s\n", force.Credentials.InstanceUrl, result.Id)
+	fmt.Printf("See build status (and Quick Deploy if needed) at: %s/changemgmt/monitorDeploymentsDetails.apexp?retURL=/changemgmt/monitorDeployment.apexp&asyncId=%s\n", force.Credentials.InstanceUrl, result.Id)
 
 	// if failures, return non-zero exit code:
 	if !result.Success || len(problems) > 0 {
