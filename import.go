@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/joist-engineering/force/project"
 	"github.com/joist-engineering/force/salesforce"
@@ -133,13 +134,12 @@ func runImport(cmd *Command, args []string) {
 	}
 
 	fmt.Printf("\nFailures - %d\n", len(problems))
-	if *verbose {
-		for _, problem := range problems {
-			if problem.FullName == "" {
-				fmt.Println(problem.Problem)
-			} else {
-				fmt.Printf("%s: %s\n", problem.FullName, problem.Problem)
-			}
+
+	for _, problem := range problems {
+		if problem.FullName == "" {
+			fmt.Println(problem.Problem)
+		} else {
+			fmt.Printf("%s: %s\n", problem.FullName, problem.Problem)
 		}
 	}
 
@@ -160,4 +160,10 @@ func runImport(cmd *Command, args []string) {
 		}
 	}
 	fmt.Printf("Imported from %s\n", loadedProject.LoadedFromPath())
+	fmt.Printf("See build status (and Quick Deploy if needed) at: https://%s/changemgmt/monitorDeploymentsDetails.apexp?retURL=/changemgmt/monitorDeployment.apexp&asyncId=%s\n", force.Credentials.InstanceUrl, result.Id)
+
+	// if failures, return non-zero exit code:
+	if !result.Success || len(problems) > 0 {
+		os.Exit(-1)
+	}
 }
