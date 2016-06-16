@@ -19,6 +19,10 @@ import (
 
 const Version = "dev"
 
+// Should dev builds of force use statingforce-cli.herokuapp.com instead of force-cli.herokuapp.com
+// for the Oauth Salesforce gateway?
+const DevShouldUseStagingOauthGateway = false
+
 const DefaultApiVersion = "v36.0"
 
 const (
@@ -26,7 +30,7 @@ const (
 	PrereleaseClientId = "3MVG9lKcPoNINVBIRgC7lsz5tIhlg0mtoEqkA9ZjDAwEMbBy43gsnfkzzdTdhFLeNnWS8M4bnRnVv1Qj0k9MD"
 	Mobile1ClientId    = "3MVG9Iu66FKeHhIPqCB9VWfYPxjfcb5Ube.v5L81BLhnJtDYVP2nkA.mDPwfm5FTLbvL6aMftfi8w0rL7Dv7f"
 	RedirectUri        = "https://force-cli.herokuapp.com/auth/callback"
-	RedirectUriStaging = "https://force-cli.herokuapp.com/auth/callback"
+	RedirectUriStaging = "https://stagingforce-cli.herokuapp.com/auth/callback"
 )
 
 // TODO: remove this global scope
@@ -234,18 +238,17 @@ func NewForce(creds ForceCredentials) (force *Force) {
 
 func ForceSoapLogin(endpoint ForceEndpoint, apiVersion string, username string, password string) (creds ForceCredentials, err error) {
 	var surl string
-	version := strings.Split(apiVersion, "v")[1]
 	switch endpoint {
 	case EndpointProduction:
-		surl = fmt.Sprintf("https://login.salesforce.com/services/Soap/u/%s", version)
+		surl = fmt.Sprintf("https://login.salesforce.com/services/Soap/u/%s", apiVersion)
 	case EndpointTest:
-		surl = fmt.Sprintf("https://test.salesforce.com/services/Soap/u/%s", version)
+		surl = fmt.Sprintf("https://test.salesforce.com/services/Soap/u/%s", apiVersion)
 	case EndpointPrerelease:
-		surl = fmt.Sprintf("https://prerelna1.pre.salesforce.com/services/Soap/u/%s", version)
+		surl = fmt.Sprintf("https://prerelna1.pre.salesforce.com/services/Soap/u/%s", apiVersion)
 	case EndpointMobile1:
-		surl = fmt.Sprintf("https://mobile1.t.salesforce.com/services/Soap/u/%s", version)
+		surl = fmt.Sprintf("https://mobile1.t.salesforce.com/services/Soap/u/%s", apiVersion)
 	case EndpointCustom:
-		surl = fmt.Sprintf("%s/services/Soap/u/%s", CustomEndpoint, version)
+		surl = fmt.Sprintf("%s/services/Soap/u/%s", CustomEndpoint, apiVersion)
 	default:
 		util.ErrorAndExit("Unable to login with SOAP. Unknown endpoint type")
 	}
@@ -271,11 +274,11 @@ func ForceSoapLogin(endpoint ForceEndpoint, apiVersion string, username string, 
 	}
 	instanceUrl := u.Scheme + "://" + u.Host
 	identity := u.Scheme + "://" + u.Host + "/id/" + orgid + "/" + result.Id
-	creds = ForceCredentials{result.SessionId, identity, result.Id, instanceUrl, "", "", endpoint == EndpointCustom, "", version, endpoint}
+	creds = ForceCredentials{result.SessionId, identity, result.Id, instanceUrl, "", "", endpoint == EndpointCustom, "", apiVersion, endpoint}
 
 	f := NewForce(creds)
 	url := "https://force-cli"
-	if version == "dev" {
+	if Version == "dev" && DevShouldUseStagingOauthGateway {
 		url = fmt.Sprintf("%sstaging.herokuapp.com/auth/soaplogin/?id=%s&access_token=%s&instance_url=%s", url, creds.Id, creds.AccessToken, creds.InstanceUrl)
 	} else {
 		url = fmt.Sprintf("https://force-cli.herokuapp.com/auth/soaplogin/?id=%s&access_token=%s&instance_url=%s", creds.Id, creds.AccessToken, creds.InstanceUrl)
@@ -296,7 +299,7 @@ func ForceLogin(endpoint ForceEndpoint) (creds ForceCredentials, err error) {
 	var url string
 
 	Redir := RedirectUri
-	if Version == "dev" {
+	if Version == "dev" && DevShouldUseStagingOauthGateway {
 		Redir = RedirectUriStaging
 	}
 
@@ -1129,7 +1132,7 @@ func startLocalHttpServer(ch chan ForceCredentials) (port int, err error) {
 	port = listener.Addr().(*net.TCPAddr).Port
 	h := http.NewServeMux()
 	url := "https://force-cli"
-	if Version == "dev" {
+	if Version == "dev" && DevShouldUseStagingOauthGateway {
 		// url = fmt.Sprintf("%s%s", url, "staging")
 	}
 	url = fmt.Sprintf("%s%s", url, ".herokuapp.com")
