@@ -172,6 +172,8 @@ func persistBundles(bundles salesforce.AuraDefinitionBundleResult, definitions s
 					entity += ".svg"
 				case "DESIGN":
 					entity += ".design"
+				case "INTERFACE":
+					entity += ".intf"
 				default:
 					entity += fmt.Sprintf("%s.js", naming)
 				}
